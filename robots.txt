@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://interesnocto2-boop.github.io/keraton/sitemap.xml
+Sitemap: https://keraton05.ru/sitemap.xml
