@@ -1572,5 +1572,273 @@
   })();
 </script>
 
+<!-- CHATBOT -->
+<style>
+  .cb-bubble {
+    position: fixed; bottom: 28px; left: 28px; z-index: 999;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--terracotta); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 4px 20px rgba(184,90,52,.45);
+    transition: transform .2s ease, box-shadow .2s ease;
+    border: none;
+  }
+  .cb-bubble:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(184,90,52,.55); }
+  .cb-bubble .cb-badge {
+    position: absolute; top: -4px; right: -4px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #e74c3c; color: #fff; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cb-window {
+    position: fixed; bottom: 96px; left: 28px; z-index: 998;
+    width: 320px; max-height: 480px;
+    background: #fff; border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(20,16,12,.18);
+    display: flex; flex-direction: column;
+    overflow: hidden; opacity: 0; pointer-events: none;
+    transform: translateY(12px) scale(.97);
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .cb-window.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
+  .cb-head {
+    background: var(--night); color: var(--cream);
+    padding: 14px 16px; display: flex; align-items: center; gap: 10px;
+  }
+  .cb-head-av {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--terracotta); display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; color: #fff;
+    flex-shrink: 0;
+  }
+  .cb-head-name { font-weight: 600; font-size: 14px; }
+  .cb-head-status { font-size: 11px; color: var(--text-soft); }
+  .cb-close { margin-left: auto; background: none; border: none; color: var(--text-soft); cursor: pointer; font-size: 20px; line-height: 1; padding: 0 4px; }
+  .cb-messages {
+    flex: 1; overflow-y: auto; padding: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .cb-msg {
+    max-width: 85%; padding: 10px 13px; border-radius: 12px;
+    font-size: 13.5px; line-height: 1.5;
+  }
+  .cb-msg.bot { background: #f4f0ea; color: var(--night); border-bottom-left-radius: 3px; align-self: flex-start; }
+  .cb-msg.user { background: var(--terracotta); color: #fff; border-bottom-right-radius: 3px; align-self: flex-end; }
+  .cb-btns { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 16px 12px; }
+  .cb-btn {
+    background: #f4f0ea; color: var(--night); border: 1px solid #e0d8cc;
+    border-radius: 20px; padding: 7px 14px; font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: 'Manrope', sans-serif;
+    transition: background .15s ease;
+  }
+  .cb-btn:hover { background: var(--terracotta); color: #fff; border-color: var(--terracotta); }
+  .cb-input-row {
+    display: flex; gap: 8px; padding: 10px 12px;
+    border-top: 1px solid #f0ece4;
+  }
+  .cb-input {
+    flex: 1; border: 1px solid #e0d8cc; border-radius: 20px;
+    padding: 8px 14px; font-size: 13px; font-family: 'Manrope', sans-serif;
+    outline: none; color: var(--night);
+  }
+  .cb-input:focus { border-color: var(--terracotta); }
+  .cb-send {
+    background: var(--terracotta); color: #fff; border: none;
+    border-radius: 50%; width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+  }
+  @media(max-width:400px){
+    .cb-window{ width: calc(100vw - 32px); left: 16px; }
+    .cb-bubble{ left: 16px; bottom: 16px; }
+  }
+</style>
+
+<button class="cb-bubble" id="cbBubble" aria-label="Открыть чат">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  <span class="cb-badge">1</span>
+</button>
+
+<div class="cb-window" id="cbWindow">
+  <div class="cb-head">
+    <div class="cb-head-av">К</div>
+    <div>
+      <div class="cb-head-name">Кератон — консультант</div>
+      <div class="cb-head-status">Онлайн · ответим за 1 мин</div>
+    </div>
+    <button class="cb-close" id="cbClose">×</button>
+  </div>
+  <div class="cb-messages" id="cbMessages"></div>
+  <div class="cb-btns" id="cbBtns"></div>
+  <div class="cb-input-row" id="cbInputRow" style="display:none;">
+    <input class="cb-input" id="cbInput" placeholder="Введите сообщение..." />
+    <button class="cb-send" id="cbSend">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const WA = '79060666462';
+  const msgs = document.getElementById('cbMessages');
+  const btns = document.getElementById('cbBtns');
+  const inputRow = document.getElementById('cbInputRow');
+  const input = document.getElementById('cbInput');
+  const win = document.getElementById('cbWindow');
+  const bubble = document.getElementById('cbBubble');
+
+  let state = { step: 'start', name: '', phone: '', topic: '', room: '' };
+
+  function addMsg(text, type) {
+    const d = document.createElement('div');
+    d.className = 'cb-msg ' + type;
+    d.textContent = text;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function showBtns(options) {
+    btns.innerHTML = '';
+    inputRow.style.display = 'none';
+    options.forEach(opt => {
+      const b = document.createElement('button');
+      b.className = 'cb-btn';
+      b.textContent = opt.label;
+      b.onclick = () => { addMsg(opt.label, 'user'); opt.action(); };
+      btns.appendChild(b);
+    });
+  }
+
+  function showInput(placeholder) {
+    btns.innerHTML = '';
+    inputRow.style.display = 'flex';
+    input.placeholder = placeholder;
+    input.value = '';
+    input.focus();
+  }
+
+  function botSay(text, delay) {
+    return new Promise(r => setTimeout(() => { addMsg(text, 'bot'); r(); }, delay || 600));
+  }
+
+  async function start() {
+    await botSay('Здравствуйте! 👋 Я помогу подобрать плитку или сантехнику для вашего ремонта.', 400);
+    await botSay('Что вас интересует?', 1000);
+    showBtns([
+      { label: '🏠 Плитка и керамогранит', action: topicTile },
+      { label: '🚿 Сантехника', action: topicPlumbing },
+      { label: '❓ Другой вопрос', action: topicOther },
+    ]);
+  }
+
+  async function topicTile() {
+    state.topic = 'Плитка';
+    await botSay('Отлично! Для какого помещения подбираете?', 600);
+    showBtns([
+      { label: '🛁 Ванная комната', action: () => roomAdvice('ванная', 'Для ванной рекомендуем керамогранит или глазурованную керамику — влагостойкие, лёгкие в уходе. Популярные форматы: 30×60, 60×60, 60×120 см.') },
+      { label: '🍳 Кухня', action: () => roomAdvice('кухня', 'Для кухни важна стойкость к жиру и ударам. Лучший выбор — матовый или полуполированный керамогранит. Для фартука — глянцевая плитка или мозаика.') },
+      { label: '🚪 Прихожая / коридор', action: () => roomAdvice('прихожая', 'Для прихожей нужна плитка с высокой износостойкостью (класс PEI 4-5). Тёмные тона и крупный формат 60×60 или 80×80 — популярное решение.') },
+      { label: '🏗️ Фасад / улица', action: () => roomAdvice('улица', 'Для улицы обязателен морозостойкий керамогранит (показатель водопоглощения <0.5%). Матовая и рельефная поверхность — не скользит.') },
+    ]);
+  }
+
+  async function roomAdvice(room, advice) {
+    state.room = room;
+    await botSay(advice, 600);
+    await botSay('Хотите подобрать конкретные варианты? Оставьте контакт — перезвоним и покажем всё в шоуруме 🏪', 1400);
+    askName();
+  }
+
+  async function topicPlumbing() {
+    state.topic = 'Сантехника';
+    await botSay('Что именно вас интересует?', 600);
+    showBtns([
+      { label: '🛁 Ванна', action: () => plumbingAdvice('Акриловые ванны — лёгкие и тёплые на ощупь. Стальные — прочные и долговечные. Популярные размеры: 150×70, 170×75 см. Есть угловые и асимметричные.') },
+      { label: '🚿 Душевая кабина', action: () => plumbingAdvice('Душевые поддоны бывают низкие (от 4 см) и высокие. Стекло — калёное 6-8 мм. Популярные размеры: 80×80, 90×90, 100×80 см.') },
+      { label: '🚰 Смесители', action: () => plumbingAdvice('Однорычажные смесители удобнее двухвентильных. Важен класс картриджа — керамика надёжнее шарового. Латунный корпус прослужит дольше цинкового.') },
+      { label: '🚽 Унитаз / раковина', action: () => plumbingAdvice('Подвесной унитаз — проще убирать, экономит место. Напольный — проще монтаж. Раковины: накладные, встраиваемые, тюльпан. Под столешницу — популярный выбор для ванной.') },
+    ]);
+  }
+
+  async function plumbingAdvice(advice) {
+    await botSay(advice, 600);
+    await botSay('Приезжайте в шоурум — всё можно потрогать и сравнить вживую! Оставьте контакт, перезвоним 📞', 1400);
+    askName();
+  }
+
+  async function topicOther() {
+    state.topic = 'Другой вопрос';
+    await botSay('Напишите ваш вопрос — передам менеджеру:', 600);
+    showInput('Ваш вопрос...');
+    state.step = 'question';
+  }
+
+  async function askName() {
+    state.step = 'name';
+    showInput('Ваше имя...');
+  }
+
+  async function askPhone() {
+    state.step = 'phone';
+    await botSay('Спасибо, ' + state.name + '! Укажите номер телефона:', 600);
+    showInput('+7 (___) ___-__-__');
+  }
+
+  async function finish() {
+    btns.innerHTML = '';
+    inputRow.style.display = 'none';
+    const text = `💬 Заявка с чат-бота — keraton05.ru\n\n👤 Имя: ${state.name}\n📞 Телефон: ${state.phone}${state.topic ? '\n🔍 Интерес: ' + state.topic : ''}${state.room ? ' (' + state.room + ')' : ''}`;
+    await botSay('Отлично! Передаю вашу заявку менеджеру... ✅', 600);
+    await botSay('Мы перезвоним вам в ближайшее время. Также можете написать нам напрямую в WhatsApp 👇', 1200);
+    const wa = document.createElement('button');
+    wa.className = 'cb-btn';
+    wa.style.background = '#25d366';
+    wa.style.color = '#fff';
+    wa.style.borderColor = '#25d366';
+    wa.style.marginLeft = '16px';
+    wa.style.marginBottom = '12px';
+    wa.textContent = '💬 Написать в WhatsApp';
+    wa.onclick = () => window.open('https://wa.me/' + WA + '?text=' + encodeURIComponent(text), '_blank');
+    btns.appendChild(wa);
+    window.open('https://wa.me/' + WA + '?text=' + encodeURIComponent(text), '_blank');
+  }
+
+  function handleInput() {
+    const val = input.value.trim();
+    if (!val) return;
+    addMsg(val, 'user');
+    inputRow.style.display = 'none';
+
+    if (state.step === 'question') {
+      state.topic = val;
+      botSay('Понял! Оставьте имя и телефон — менеджер ответит на ваш вопрос.', 600).then(askName);
+    } else if (state.step === 'name') {
+      state.name = val;
+      askPhone();
+    } else if (state.step === 'phone') {
+      state.phone = val;
+      finish();
+    }
+  }
+
+  document.getElementById('cbSend').onclick = handleInput;
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') handleInput(); });
+
+  bubble.onclick = () => {
+    win.classList.toggle('open');
+    bubble.querySelector('.cb-badge').style.display = 'none';
+    if (win.classList.contains('open') && !msgs.children.length) start();
+  };
+  document.getElementById('cbClose').onclick = () => win.classList.remove('open');
+
+  setTimeout(() => {
+    if (!win.classList.contains('open')) {
+      bubble.querySelector('.cb-badge').style.display = 'flex';
+    }
+  }, 8000);
+})();
+</script>
+
 </body>
 </html>
