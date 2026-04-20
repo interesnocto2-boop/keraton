@@ -930,127 +930,116 @@ footer {
     document.head.appendChild(script);
   })();
 
-  // 3D плавающие плитки — фон героя
+  // Исламская мозаика — плитки собираются в узор
   (function(){
     const cvs = document.getElementById('heroBg');
     if (!cvs) return;
     const ctx = cvs.getContext('2d');
 
-    // Палитра — реальные цвета плитки и натурального камня
-    const PALETTE = [
-      {top:[245,240,232], mid:[228,220,208], bot:[190,182,168], edge:[160,150,135]}, // Калакатта мрамор
-      {top:[215,200,162], mid:[198,182,144], bot:[168,152,114], edge:[130,112,80]},  // Травертин
-      {top:[72,68,58],    mid:[56,52,44],    bot:[38,35,28],    edge:[25,22,16]},    // Антрацит
-      {top:[210,105,62],  mid:[188,85,46],   bot:[155,65,32],   edge:[120,48,22]},  // Терракота
-      {top:[215,185,138], mid:[198,168,118], bot:[168,138,88],  edge:[140,108,64]}, // Дорадо золото
-      {top:[158,172,158], mid:[138,155,138], bot:[110,125,110], edge:[82,96,82]},   // Сейдж зелёный
-      {top:[245,242,238], mid:[232,228,222], bot:[205,200,192], edge:[175,168,158]},// Бьянко белый
-      {top:[100,92,80],   mid:[80,74,64],    bot:[58,52,44],    edge:[40,35,28]},   // Сланец
-      {top:[185,158,200], mid:[165,138,182], bot:[135,108,152], edge:[108,82,125]}, // Лиловый мрамор
-      {top:[120,165,175], mid:[100,145,158], bot:[75,118,130],  edge:[50,90,102]},  // Голубой камень
+    const TS = 28, GP = 2; // размер плитки и шов
+
+    // Палитра — золото, слоновая кость, морской, терракота
+    const dk = '#16120a', tb = '#1e3848', gd = '#c9a97a',
+          lg = '#e8d498', iv = '#f0e8d8', tr = '#a84830';
+
+    // 8×8 повторяющаяся единица — исламская звезда
+    const UNIT = [
+      [dk, dk, gd, lg, lg, gd, dk, dk],
+      [dk, tb, tb, gd, gd, tb, tb, dk],
+      [gd, tb, iv, gd, gd, iv, tb, gd],
+      [lg, gd, gd, tr, tr, gd, gd, lg],
+      [lg, gd, gd, tr, tr, gd, gd, lg],
+      [gd, tb, iv, gd, gd, iv, tb, gd],
+      [dk, tb, tb, gd, gd, tb, tb, dk],
+      [dk, dk, gd, lg, lg, gd, dk, dk],
     ];
 
-    function resize() {
-      cvs.width  = cvs.offsetWidth;
-      cvs.height = cvs.offsetHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize);
+    let tiles = [], W = 0, H = 0;
 
-    function W(){ return cvs.width; }
-    function H(){ return cvs.height; }
-
-    function newTile(startBelow) {
-      const p = PALETTE[Math.floor(Math.random() * PALETTE.length)];
-      const w = 70 + Math.random() * 90;
-      const aspect = 0.5 + Math.random() * 1.0; // квадрат или прямоугольник
-      const h = w * aspect;
-      return {
-        x: 30 + Math.random() * (W() - 60),
-        y: startBelow ? H() + h + Math.random() * 200 : -h - Math.random() * H(),
-        w, h, p,
-        tilt: 0.35 + Math.random() * 0.45,    // сжатие по Y для 3D-наклона
-        rotZ: (Math.random() - 0.5) * 38 * Math.PI/180,
-        vy: -(0.18 + Math.random() * 0.32),   // скорость вверх
-        vx: (Math.random() - 0.5) * 0.18,
-        wobble: Math.random() * Math.PI * 2,
-        wobbleAmp: 0.008 + Math.random() * 0.012,
-        opacity: 0.07 + Math.random() * 0.13,
-      };
+    function scat(t) {
+      const side = ~~(Math.random() * 4);
+      const pad = TS * (3 + Math.random() * 12);
+      let x, y;
+      if (side === 0)      { x = Math.random()*W; y = -pad; }
+      else if (side === 1) { x = W+pad; y = Math.random()*H; }
+      else if (side === 2) { x = Math.random()*W; y = H+pad; }
+      else                 { x = -pad; y = Math.random()*H; }
+      t.x = t.tx = x; t.y = t.ty = y;
     }
 
-    // Запускаем 22 плитки сразу, разброс по всему экрану
-    const tiles = Array.from({length:22}, () => {
-      const t = newTile(false);
-      t.y = Math.random() * H();
-      return t;
-    });
-
-    function drawTile(t) {
-      const {x, y, w, h, p, tilt, rotZ, wobble, wobbleAmp, opacity} = t;
-      const rot = rotZ + Math.sin(wobble) * wobbleAmp;
-
-      ctx.save();
-      ctx.globalAlpha = opacity;
-      ctx.translate(x, y);
-      ctx.rotate(rot);
-      ctx.scale(1, tilt); // 3D наклон
-
-      const hw = w/2, hh = h/2;
-
-      // Лицевая поверхность — градиент камня
-      const face = ctx.createLinearGradient(-hw, -hh, hw, hh);
-      face.addColorStop(0,    `rgb(${p.top[0]},${p.top[1]},${p.top[2]})`);
-      face.addColorStop(0.42, `rgb(${p.mid[0]},${p.mid[1]},${p.mid[2]})`);
-      face.addColorStop(1,    `rgb(${p.bot[0]},${p.bot[1]},${p.bot[2]})`);
-      ctx.fillStyle = face;
-      ctx.beginPath();
-      ctx.rect(-hw, -hh, w, h);
-      ctx.fill();
-
-      // Блик — светлая полоса сверху-слева
-      const shine = ctx.createLinearGradient(-hw, -hh, 0, 0);
-      shine.addColorStop(0, 'rgba(255,250,240,0.28)');
-      shine.addColorStop(1, 'rgba(255,250,240,0)');
-      ctx.fillStyle = shine;
-      ctx.fill();
-
-      // Нижний торец (глубина/тень)
-      const edgeH = Math.max(3, h * 0.07);
-      ctx.fillStyle = `rgb(${p.edge[0]},${p.edge[1]},${p.edge[2]})`;
-      ctx.fillRect(-hw, hh - edgeH, w, edgeH);
-
-      // Правый торец
-      const edgeW = Math.max(2, w * 0.05);
-      const rEdge = ctx.createLinearGradient(hw - edgeW, 0, hw, 0);
-      rEdge.addColorStop(0, `rgba(${p.edge[0]},${p.edge[1]},${p.edge[2]},0)`);
-      rEdge.addColorStop(1, `rgba(${p.edge[0]},${p.edge[1]},${p.edge[2]},0.8)`);
-      ctx.fillStyle = rEdge;
-      ctx.fillRect(hw - edgeW, -hh, edgeW, h);
-
-      // Тонкая рамка стыка
-      ctx.strokeStyle = 'rgba(255,245,220,0.12)';
-      ctx.lineWidth = 0.8;
-      ctx.beginPath();
-      ctx.rect(-hw, -hh, w, h);
-      ctx.stroke();
-
-      ctx.restore();
+    function build() {
+      W = cvs.width  = cvs.offsetWidth;
+      H = cvs.height = cvs.offsetHeight;
+      const cols = Math.ceil(W/TS)+1, rows = Math.ceil(H/TS)+1;
+      tiles = [];
+      for (let r=0; r<rows; r++) for (let c=0; c<cols; c++) {
+        const t = { fx:c*TS, fy:r*TS, x:0,y:0, tx:0,ty:0,
+                    color: UNIT[r%8][c%8], col:c, row:r,
+                    spd: 0.07+Math.random()*0.07, delay:0 };
+        scat(t); tiles.push(t);
+      }
     }
+    build();
+    window.addEventListener('resize', build);
 
-    function draw() {
-      ctx.clearRect(0, 0, W(), H());
-      const h = H();
+    const ST = {WAIT:0, ASSEMBLE:1, HOLD:2, DISPERSE:3};
+    let state = ST.WAIT, timer = 0;
+
+    function startAssemble() {
+      state = ST.ASSEMBLE; timer = 0;
       tiles.forEach(t => {
-        t.y += t.vy;
-        t.x += t.vx;
-        t.wobble += 0.006;
-        if (t.y < -t.h * 3) Object.assign(t, newTile(true));
-        drawTile(t);
+        scat(t);
+        // волна от центра — сначала центральные, потом края
+        const dcx = Math.abs(t.col - Math.floor(W/TS/2));
+        const dcy = Math.abs(t.row - Math.floor(H/TS/2));
+        t.delay = (dcx + dcy) * 2.8;
       });
     }
 
-    (function loop(){ requestAnimationFrame(loop); draw(); })();
+    function startDisperse() {
+      state = ST.DISPERSE; timer = 0;
+      const cx = W/2, cy = H/2;
+      tiles.forEach(t => {
+        const dx = (t.x-cx)||1, dy = (t.y-cy)||1;
+        const d = Math.sqrt(dx*dx+dy*dy);
+        const dist = 350+Math.random()*350;
+        t.tx = t.x+(dx/d)*dist;
+        t.ty = t.y+(dy/d)*dist;
+      });
+    }
+
+    startAssemble();
+
+    function draw() {
+      requestAnimationFrame(draw);
+      ctx.clearRect(0,0,W,H);
+      timer++;
+
+      if (state === ST.ASSEMBLE) {
+        let done = true;
+        tiles.forEach(t => {
+          if (timer > t.delay) { t.tx = t.fx; t.ty = t.fy; }
+          else done = false;
+          if (Math.abs(t.x-t.fx)>2 || Math.abs(t.y-t.fy)>2) done = false;
+        });
+        if (done) { state = ST.HOLD; timer = 0; }
+      }
+      else if (state === ST.HOLD   && timer > 280) startDisperse();
+      else if (state === ST.DISPERSE && timer > 120) { state = ST.WAIT; timer = 0; }
+      else if (state === ST.WAIT   && timer > 40)  startAssemble();
+
+      tiles.forEach(t => {
+        t.x += (t.tx-t.x)*t.spd;
+        t.y += (t.ty-t.y)*t.spd;
+        if (t.x<-TS||t.x>W+TS||t.y<-TS||t.y>H+TS) return;
+        ctx.fillStyle = t.color;
+        ctx.fillRect(~~t.x, ~~t.y, TS-GP, TS-GP);
+        // верхний блик
+        ctx.fillStyle = 'rgba(255,242,205,0.09)';
+        ctx.fillRect(~~t.x, ~~t.y, TS-GP, 2);
+      });
+    }
+    draw();
   })();
 
   // Индикатор режима работы
