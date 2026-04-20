@@ -497,6 +497,16 @@ footer {
 <script>
 (function(){
   const WA = '79640224848';
+  const TG_TOKEN = '8629733791:AAGjJIjHLYuN0OtNah5PsFrMcb2dxW9dR1A';
+  const TG_CHAT = '5576842404';
+
+  function sendTelegram(text) {
+    fetch('https://api.telegram.org/bot' + TG_TOKEN + '/sendMessage', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ chat_id: TG_CHAT, text: text, parse_mode: 'HTML' })
+    });
+  }
   const msgs = document.getElementById('cbMessages');
   const btns = document.getElementById('cbBtns');
   const inputRow = document.getElementById('cbInputRow');
@@ -602,10 +612,10 @@ footer {
   async function finish() {
     btns.innerHTML = '';
     inputRow.style.display = 'none';
-    const text = `💬 Заявка с сайта keraton05.ru\n\n👤 Имя: ${state.name}\n📞 Телефон: ${state.phone}${state.topic ? '\n🔍 Интерес: ' + state.topic : ''}${state.room ? ' (' + state.room + ')' : ''}`;
+    const text = `💬 <b>Новая заявка — keraton05.ru</b>\n\n👤 Имя: ${state.name}\n📞 Телефон: ${state.phone}${state.topic ? '\n🔍 Интерес: ' + state.topic : ''}${state.room ? ' (' + state.room + ')' : ''}`;
     await botSay('Передаю заявку менеджеру... ✅', 600);
     await botSay('Перезвоним в ближайшее время!', 1200);
-    window.open('https://wa.me/' + WA + '?text=' + encodeURIComponent(text), '_blank');
+    sendTelegram(text);
   }
 
   function handleInput() {
