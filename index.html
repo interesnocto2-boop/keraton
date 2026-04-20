@@ -399,83 +399,101 @@ footer {
   </a>
 </div>
 
-<!-- REVIEWS -->
-<section style="max-width:600px;margin:0 auto;padding:0 16px 56px;">
-  <div class="map-label" style="margin-bottom:20px;">
-    ★★★★★ &nbsp; 87 отзывов &nbsp; · &nbsp; Оценка 4.9
-  </div>
-  <div id="reviews-list" style="display:flex;flex-direction:column;gap:12px;"></div>
-  <button id="reviews-more" style="display:block;width:100%;margin-top:16px;padding:13px;background:rgba(201,169,122,.08);border:1px solid rgba(201,169,122,.2);border-radius:12px;color:#c9a97a;font-size:13px;font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif;">
-    Показать ещё отзывы
-  </button>
-</section>
-
+<!-- REVIEWS POPUP -->
 <style>
-  .review-card {
-    background: rgba(255,255,255,.03);
-    border: 1px solid rgba(255,255,255,.07);
-    border-radius: 14px;
-    padding: 14px 16px;
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
+  .rv-bubble {
+    position: fixed; bottom: 96px; left: 28px; z-index: 997;
+    background: rgba(201,169,122,.12); border: 1px solid rgba(201,169,122,.25);
+    color: #c9a97a; border-radius: 100px; padding: 8px 16px 8px 12px;
+    font-size: 13px; font-weight: 600; font-family: 'Manrope', sans-serif;
+    cursor: pointer; display: flex; align-items: center; gap: 7px;
+    transition: background .2s;
   }
-  .review-av {
-    width: 38px; height: 38px; border-radius: 50%;
-    background: rgba(201,169,122,.15);
+  .rv-bubble:hover { background: rgba(201,169,122,.22); }
+  .rv-window {
+    position: fixed; bottom: 140px; left: 28px; z-index: 996;
+    width: 310px; max-height: 440px;
+    background: #1a1510; border: 1px solid rgba(201,169,122,.15); border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.5);
+    display: flex; flex-direction: column; overflow: hidden;
+    opacity: 0; pointer-events: none;
+    transform: translateY(12px) scale(.97);
+    transition: opacity .25s, transform .25s;
+  }
+  .rv-window.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
+  .rv-head {
+    background: #0f0d0a; padding: 13px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(201,169,122,.1);
+  }
+  .rv-head-title { font-size: 13px; font-weight: 600; color: #f0e8d8; }
+  .rv-head-sub { font-size: 11px; color: #c9a97a; }
+  .rv-close { background: none; border: none; color: #7a6a52; cursor: pointer; font-size: 20px; line-height: 1; }
+  .rv-list { overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .rv-card {
+    background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
+    border-radius: 12px; padding: 11px 13px; display: flex; gap: 10px;
+  }
+  .rv-av {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(201,169,122,.15); color: #c9a97a;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 600;
-    color: #c9a97a; flex-shrink: 0;
+    font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 600;
+    flex-shrink: 0;
   }
-  .review-name { font-size: 13px; font-weight: 600; color: #f0e8d8; margin-bottom: 2px; }
-  .review-stars { font-size: 11px; color: #c9a97a; margin-bottom: 6px; }
-  .review-text { font-size: 13px; color: #a09070; line-height: 1.55; }
-  .review-date { font-size: 11px; color: #4a3f30; margin-top: 6px; }
+  .rv-name { font-size: 12px; font-weight: 600; color: #f0e8d8; margin-bottom: 2px; }
+  .rv-stars { font-size: 10px; color: #c9a97a; margin-bottom: 5px; }
+  .rv-text { font-size: 12px; color: #8a7a60; line-height: 1.5; }
+  .rv-date { font-size: 10px; color: #4a3f30; margin-top: 4px; }
+  @media(max-width:400px){ .rv-window{ width: calc(100vw - 32px); left: 16px; } .rv-bubble{ left: 16px; } }
 </style>
+
+<button class="rv-bubble" id="rvBubble">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.86 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z"/></svg>
+  ★ 4.9 · 87 отзывов
+</button>
+
+<div class="rv-window" id="rvWindow">
+  <div class="rv-head">
+    <div>
+      <div class="rv-head-title">Отзывы клиентов</div>
+      <div class="rv-head-sub">★★★★★ 4.9 · 87 оценок</div>
+    </div>
+    <button class="rv-close" id="rvClose">×</button>
+  </div>
+  <div class="rv-list" id="rvList"></div>
+</div>
 
 <script>
 (function(){
-  const all = [
+  const reviews = [
     {n:'Руслан М.', s:5, t:'Брал керамогранит на 40 квадратов. Помогли подобрать, посчитали расход, даже скидку сделали. Буду ещё обращаться.', d:'3 дня назад'},
     {n:'Патимат Г.', s:5, t:'Очень вежливые продавцы, большой выбор. Нашла именно то что хотела для ванной. Спасибо Кератону!', d:'5 дней назад'},
-    {n:'Арсен Д.', s:4, t:'Хорошее место, выбор большой. Немного долго ждали консультанта, но в целом всё отлично. Смеситель доволен.', d:'1 неделю назад'},
-    {n:'Зарема К.', s:5, t:'Долго выбирала плитку для прихожей, сотрудники терпеливо всё показали и объяснили. Довольна покупкой!', d:'1 неделю назад'},
-    {n:'Магомед Ш.', s:5, t:'Хороший ассортимент, есть редкие форматы которых нет у конкурентов. Цены честные. Советую.', d:'2 недели назад'},
-    {n:'Аминат Р.', s:4, t:'В целом хорошо. Немного подождали доставку но товар пришёл целый. Плитка красивая, укладчик доволен.', d:'2 недели назад'},
-    {n:'Шамиль Б.', s:5, t:'Сделали ремонт в двух санузлах, вся плитка отсюда. Брак ноль, размеры точные. Мастера оценили качество.', d:'3 недели назад'},
-    {n:'Хадижат У.', s:5, t:'Купила мозаику для фартука на кухне — просто красота! Никто в городе такого нет. Только Кератон!', d:'1 месяц назад'},
-    {n:'Камиль Н.', s:5, t:'Отличный магазин, ездил из Махачкалы специально. Стоит того — выбор огромный и цены лучше чем в городе.', d:'1 месяц назад'},
-    {n:'Лейла С.', s:5, t:'Брала ванну и смесители. Всё на высшем уровне, помогли выбрать под наш интерьер. Спасибо большое!', d:'1 месяц назад'},
-    {n:'Ибрагим Т.', s:5, t:'Несколько лет покупаю здесь всё для ремонта. Постоянный клиент — всегда доволен качеством и сервисом.', d:'2 месяца назад'},
-    {n:'Джамиля Х.', s:4, t:'Хороший магазин, но хотелось бы больше вариантов в бюджетном сегменте. В целом довольна, плитка качественная.', d:'2 месяца назад'},
+    {n:'Арсен Д.', s:4, t:'Хорошее место, выбор большой. Немного долго ждали консультанта, но в целом всё отлично.', d:'1 неделю назад'},
+    {n:'Зарема К.', s:5, t:'Долго выбирала плитку для прихожей, сотрудники терпеливо всё показали и объяснили. Довольна!', d:'1 неделю назад'},
+    {n:'Магомед Ш.', s:5, t:'Хороший ассортимент, есть редкие форматы которых нет у конкурентов. Цены честные.', d:'2 недели назад'},
+    {n:'Аминат Р.', s:4, t:'В целом хорошо. Немного подождали доставку но товар пришёл целый. Плитка красивая.', d:'2 недели назад'},
+    {n:'Шамиль Б.', s:5, t:'Сделали ремонт в двух санузлах, вся плитка отсюда. Брак ноль, размеры точные.', d:'3 недели назад'},
+    {n:'Хадижат У.', s:5, t:'Купила мозаику для фартука на кухне — просто красота! Никто в городе такого нет.', d:'1 месяц назад'},
+    {n:'Камиль Н.', s:5, t:'Ездил из Махачкалы специально. Стоит того — выбор огромный и цены лучше чем в городе.', d:'1 месяц назад'},
+    {n:'Лейла С.', s:5, t:'Брала ванну и смесители. Всё на высшем уровне, помогли выбрать под наш интерьер.', d:'1 месяц назад'},
+    {n:'Ибрагим Т.', s:5, t:'Несколько лет покупаю здесь всё для ремонта. Всегда доволен качеством и сервисом.', d:'2 месяца назад'},
+    {n:'Джамиля Х.', s:4, t:'Хороший магазин, но хотелось бы больше бюджетных вариантов. В целом довольна.', d:'2 месяца назад'},
   ];
 
-  let shown = 0;
-  const list = document.getElementById('reviews-list');
-  const btn = document.getElementById('reviews-more');
+  const list = document.getElementById('rvList');
+  const win = document.getElementById('rvWindow');
 
-  function showNext() {
-    const batch = all.slice(shown, shown + 4);
-    batch.forEach(r => {
-      const stars = '★'.repeat(r.s) + '☆'.repeat(5 - r.s);
-      const card = document.createElement('div');
-      card.className = 'review-card';
-      card.innerHTML = `
-        <div class="review-av">${r.n[0]}</div>
-        <div>
-          <div class="review-name">${r.n}</div>
-          <div class="review-stars">${stars}</div>
-          <div class="review-text">${r.t}</div>
-          <div class="review-date">${r.d}</div>
-        </div>`;
-      list.appendChild(card);
-    });
-    shown += batch.length;
-    if (shown >= all.length) btn.style.display = 'none';
-  }
+  reviews.forEach(r => {
+    const stars = '★'.repeat(r.s) + '☆'.repeat(5 - r.s);
+    const card = document.createElement('div');
+    card.className = 'rv-card';
+    card.innerHTML = `<div class="rv-av">${r.n[0]}</div><div><div class="rv-name">${r.n}</div><div class="rv-stars">${stars}</div><div class="rv-text">${r.t}</div><div class="rv-date">${r.d}</div></div>`;
+    list.appendChild(card);
+  });
 
-  showNext();
-  btn.onclick = showNext;
+  document.getElementById('rvBubble').onclick = () => win.classList.toggle('open');
+  document.getElementById('rvClose').onclick = () => win.classList.remove('open');
 })();
 </script>
 
