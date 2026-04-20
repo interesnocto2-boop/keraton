@@ -912,10 +912,12 @@ footer {
     transition: transform .2s, box-shadow .2s; border: none;
   }
   .cb-bubble:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(201,169,122,.55); }
-  @keyframes cb-pulse { 0%,100%{ box-shadow: 0 4px 20px rgba(37,211,102,.4); } 50%{ box-shadow: 0 4px 28px rgba(37,211,102,.9), 0 0 0 10px rgba(37,211,102,.15); } }
-  @keyframes cb-shake { 0%,100%{transform:rotate(0deg)} 20%{transform:rotate(-12deg)} 40%{transform:rotate(12deg)} 60%{transform:rotate(-8deg)} 80%{transform:rotate(8deg)} }
-  .cb-bubble.pulse { animation: cb-pulse 1.2s ease-in-out infinite; }
-  .cb-bubble.pulse::after { content:''; position:absolute; top:-3px; right:-3px; width:12px; height:12px; border-radius:50%; background:#25d366; border:2px solid #0f0d0a; animation: cb-pulse 1.2s ease-in-out infinite; }
+  @keyframes cb-glow { 0%,100%{ box-shadow: 0 4px 20px rgba(37,211,102,.4); } 50%{ box-shadow: 0 4px 28px rgba(37,211,102,.9), 0 0 0 10px rgba(37,211,102,.15); } }
+  @keyframes cb-dot-ping { 0%{ transform:scale(1); opacity:1; } 100%{ transform:scale(2.5); opacity:0; } }
+  .cb-bubble.pulse { animation: cb-glow 1.2s ease-in-out infinite; }
+  .cb-green-dot { position:fixed; bottom:55px; left:55px; z-index:1000; width:13px; height:13px; border-radius:50%; background:#25d366; border:2px solid #0f0d0a; display:none; }
+  .cb-green-dot::after { content:''; position:absolute; inset:-3px; border-radius:50%; background:#25d366; animation: cb-dot-ping 1.2s ease-out infinite; }
+  .cb-green-dot.show { display:block; }
   .cb-badge {
     position: absolute; top: -4px; right: -4px;
     width: 18px; height: 18px; border-radius: 50%;
@@ -976,6 +978,7 @@ footer {
   @media(max-width:400px){ .cb-window{ width: calc(100vw - 32px); left: 16px; } .cb-bubble{ left: 16px; } }
 </style>
 
+<div class="cb-green-dot" id="cbGreenDot"></div>
 <button class="cb-bubble" id="cbBubble" aria-label="Чат">
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   <span class="cb-badge" id="cbBadge">1</span>
@@ -1140,6 +1143,7 @@ footer {
   document.getElementById('cbBubble').onclick = () => {
     win.classList.toggle('open');
     bubble.classList.remove('pulse');
+    document.getElementById('cbGreenDot').classList.remove('show');
     document.getElementById('cbBadge').style.display = 'none';
     if (win.classList.contains('open') && !msgs.children.length) start();
   };
@@ -1152,6 +1156,7 @@ footer {
     setTimeout(() => {
       win.classList.remove('open');
       bubble.classList.add('pulse');
+      document.getElementById('cbGreenDot').classList.add('show');
     }, 2500);
   }, 1000);
 })();
