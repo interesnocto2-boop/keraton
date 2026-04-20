@@ -339,6 +339,9 @@ footer {
     <div class="brand-name">Кератон</div>
     <div class="brand-sub">Плитка &nbsp;·&nbsp; Сантехника &nbsp;·&nbsp; Каспийск</div>
 
+    <!-- Venetian tile floor -->
+    <canvas id="venetianFloor" style="width:100%;max-width:420px;height:170px;border-radius:16px;margin:20px 0 8px;display:block;"></canvas>
+
     <!-- Индикатор режима работы -->
     <div id="workStatus" style="display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:100px;border:1px solid;font-size:12px;font-weight:600;letter-spacing:0.04em;margin-bottom:20px;"></div>
 
@@ -907,6 +910,151 @@ footer {
       (function animate(){requestAnimationFrame(animate);renderer.render(scene,camera);})();
     };
     document.head.appendChild(script);
+  })();
+
+  // Venetian marble tile floor
+  (function(){
+    const cvs = document.getElementById('venetianFloor');
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    const NCOLS = 7, NROWS = 5;
+
+    function resize() {
+      cvs.width  = cvs.offsetWidth  * DPR;
+      cvs.height = cvs.offsetHeight * DPR;
+      ctx.scale(DPR, DPR);
+    }
+    resize();
+
+    // Pre-generate marble seeds per tile
+    const rng = (function(s){ return ()=>{ s=Math.sin(s)*10000; return s-Math.floor(s); }; })(42);
+    const seeds = Array.from({length: NCOLS * NROWS}, () => ({
+      base: rng(), v1: rng(), v2: rng(), v3: rng(), v4: rng(), tone: rng()
+    }));
+
+    // Map grid corner to screen
+    function project(col, row) {
+      const W = cvs.offsetWidth, H = cvs.offsetHeight;
+      const t = row / NROWS;
+      const p = 1 - Math.pow(1 - t, 1.8); // perspective curve
+      const nearW = W * 1.5, farW = W * 0.18;
+      const rowW = farW + (nearW - farW) * p;
+      const y = H * 0.02 + (H * 0.98) * Math.pow(t, 0.75);
+      const x = W / 2 + (col / NCOLS - 0.5) * rowW;
+      return {x, y};
+    }
+
+    function drawTile(corners, seed, lit) {
+      const [tl, tr, br, bl] = corners;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y);
+      ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y);
+      ctx.closePath();
+      ctx.clip();
+
+      const cx = (tl.x+br.x)/2, cy = (tl.y+br.y)/2;
+      const tw = Math.abs(br.x-tl.x), th = Math.abs(br.y-tl.y);
+
+      // Base marble color — creamy ivory / warm gold
+      const r = Math.floor(225 + seed.base * 18);
+      const g = Math.floor(215 + seed.base * 14);
+      const b = Math.floor(190 + seed.base * 22);
+      const grad = ctx.createLinearGradient(tl.x, tl.y, br.x, br.y);
+      grad.addColorStop(0, `rgb(${r},${g},${b})`);
+      grad.addColorStop(0.45, `rgb(${r+8},${g+6},${b+4})`);
+      grad.addColorStop(1, `rgb(${r-10},${g-8},${b-6})`);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Vein 1 — thin diagonal golden vein
+      ctx.beginPath();
+      ctx.moveTo(tl.x + seed.v1 * tw, tl.y);
+      ctx.quadraticCurveTo(
+        cx + (seed.v2 - 0.5) * tw * 0.6,
+        cy + (seed.v3 - 0.5) * th * 0.5,
+        bl.x + seed.v4 * tw, bl.y
+      );
+      ctx.strokeStyle = `rgba(175,145,90,${0.25 + seed.v1 * 0.35})`;
+      ctx.lineWidth = 0.6 + seed.v2 * 0.6;
+      ctx.stroke();
+
+      // Vein 2 — faint secondary vein
+      ctx.beginPath();
+      ctx.moveTo(tr.x - seed.v4 * tw * 0.5, tr.y);
+      ctx.quadraticCurveTo(cx, cy + seed.v3 * th * 0.4, br.x - seed.v1 * tw * 0.5, br.y);
+      ctx.strokeStyle = `rgba(155,130,80,${0.15 + seed.v3 * 0.18})`;
+      ctx.lineWidth = 0.4;
+      ctx.stroke();
+
+      // Specular shimmer
+      if (lit > 0.02) {
+        const sg = ctx.createRadialGradient(cx, cy - th*0.15, 0, cx, cy, Math.max(tw, th)*0.9);
+        sg.addColorStop(0, `rgba(255,252,238,${lit*0.72})`);
+        sg.addColorStop(0.55, `rgba(255,248,220,${lit*0.28})`);
+        sg.addColorStop(1, 'rgba(255,248,220,0)');
+        ctx.beginPath();
+        ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y);
+        ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y); ctx.closePath();
+        ctx.fillStyle = sg; ctx.fill();
+      }
+
+      ctx.restore();
+
+      // Grout line
+      ctx.beginPath();
+      ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y);
+      ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y); ctx.closePath();
+      ctx.strokeStyle = 'rgba(70,55,35,0.55)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+
+    let t = 0;
+    function draw() {
+      const W = cvs.offsetWidth, H = cvs.offsetHeight;
+      ctx.clearRect(0, 0, W, H);
+
+      t += 0.006;
+      const shimX = (Math.sin(t * 0.65) + 1) / 2;
+      const shimY = (Math.sin(t * 0.42 + 1.1) + 1) / 2;
+
+      for (let row = 0; row < NROWS; row++) {
+        for (let col = 0; col < NCOLS; col++) {
+          const tl = project(col, row), tr = project(col+1, row);
+          const br = project(col+1, row+1), bl = project(col, row+1);
+          if (br.y < 0 || tl.y > H + 10) continue;
+
+          const tx = col / NCOLS, ty = row / NROWS;
+          const dx = tx - shimX, dy = ty - shimY;
+          const dist = Math.sqrt(dx*dx + dy*dy*0.4);
+          const lit = Math.max(0, 1 - dist * 3.2);
+
+          drawTile([tl, tr, br, bl], seeds[row * NCOLS + col], lit);
+        }
+      }
+
+      // Edge fades
+      const W2 = W, H2 = H;
+      const fadeT = ctx.createLinearGradient(0,0,0,H2*0.4);
+      fadeT.addColorStop(0,'#0f0d0a'); fadeT.addColorStop(1,'rgba(15,13,10,0)');
+      ctx.fillStyle = fadeT; ctx.fillRect(0,0,W2,H2);
+
+      const fadeB = ctx.createLinearGradient(0,H2*0.65,0,H2);
+      fadeB.addColorStop(0,'rgba(15,13,10,0)'); fadeB.addColorStop(1,'#0f0d0a');
+      ctx.fillStyle = fadeB; ctx.fillRect(0,0,W2,H2);
+
+      const fadeL = ctx.createLinearGradient(0,0,W2*0.12,0);
+      fadeL.addColorStop(0,'#0f0d0a'); fadeL.addColorStop(1,'rgba(15,13,10,0)');
+      ctx.fillStyle = fadeL; ctx.fillRect(0,0,W2,H2);
+
+      const fadeR = ctx.createLinearGradient(W2*0.88,0,W2,0);
+      fadeR.addColorStop(0,'rgba(15,13,10,0)'); fadeR.addColorStop(1,'#0f0d0a');
+      ctx.fillStyle = fadeR; ctx.fillRect(0,0,W2,H2);
+    }
+
+    (function loop(){ requestAnimationFrame(loop); draw(); })();
   })();
 
   // Индикатор режима работы
