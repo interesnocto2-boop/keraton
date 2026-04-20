@@ -501,11 +501,11 @@ footer {
   const TG_CHAT = '5576842404';
 
   function sendTelegram(text) {
-    fetch('https://api.telegram.org/bot' + TG_TOKEN + '/sendMessage', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ chat_id: TG_CHAT, text: text, parse_mode: 'HTML' })
-    });
+    const url = 'https://api.telegram.org/bot' + TG_TOKEN + '/sendMessage'
+      + '?chat_id=' + TG_CHAT
+      + '&text=' + encodeURIComponent(text)
+      + '&parse_mode=HTML';
+    fetch(url);
   }
   const msgs = document.getElementById('cbMessages');
   const btns = document.getElementById('cbBtns');
