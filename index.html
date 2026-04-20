@@ -727,6 +727,8 @@ footer {
     transition: transform .2s, box-shadow .2s; border: none;
   }
   .cb-bubble:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(201,169,122,.55); }
+  @keyframes cb-pulse { 0%,100%{ box-shadow: 0 4px 20px rgba(201,169,122,.4); } 50%{ box-shadow: 0 4px 28px rgba(201,169,122,.9), 0 0 0 8px rgba(201,169,122,.15); } }
+  .cb-bubble.pulse { animation: cb-pulse 1.5s ease-in-out infinite; }
   .cb-badge {
     position: absolute; top: -4px; right: -4px;
     width: 18px; height: 18px; border-radius: 50%;
@@ -950,6 +952,7 @@ footer {
 
   document.getElementById('cbBubble').onclick = () => {
     win.classList.toggle('open');
+    bubble.classList.remove('pulse');
     document.getElementById('cbBadge').style.display = 'none';
     if (win.classList.contains('open') && !msgs.children.length) start();
   };
@@ -959,6 +962,10 @@ footer {
     win.classList.add('open');
     document.getElementById('cbBadge').style.display = 'none';
     start();
+    setTimeout(() => {
+      win.classList.remove('open');
+      bubble.classList.add('pulse');
+    }, 2500);
   }, 1000);
 })();
 </script>
