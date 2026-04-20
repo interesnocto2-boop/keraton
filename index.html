@@ -1142,7 +1142,7 @@ footer {
 
   document.getElementById('cbBubble').onclick = () => {
     win.classList.toggle('open');
-    bubble.classList.remove('pulse');
+    document.getElementById('cbBubble').classList.remove('pulse');
     document.getElementById('cbGreenDot').classList.remove('show');
     document.getElementById('cbBadge').style.display = 'none';
     if (win.classList.contains('open') && !msgs.children.length) start();
@@ -1155,7 +1155,7 @@ footer {
     start();
     setTimeout(() => {
       win.classList.remove('open');
-      bubble.classList.add('pulse');
+      document.getElementById('cbBubble').classList.add('pulse');
       document.getElementById('cbGreenDot').classList.add('show');
     }, 2500);
   }, 1000);
