@@ -62,11 +62,6 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 
-@keyframes kGlint {
-  0%, 18%  { transform: translateX(-80px); }
-  68%, 100% { transform: translateX(140px); }
-}
-.k-shimmer { animation: kGlint 3.8s ease-in-out infinite; }
 body {
   font-family: 'Manrope', sans-serif;
   background: #0f0d0a;
@@ -295,67 +290,7 @@ footer {
   <div class="hero-content">
     <!-- LOGO -->
     <div class="logo-wrap">
-      <svg class="logo-svg" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <!-- Плиточные акценты -->
-          <linearGradient id="g1" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#c9a97a" stop-opacity=".35"/>
-            <stop offset="100%" stop-color="#8a6040" stop-opacity=".15"/>
-          </linearGradient>
-          <linearGradient id="g2" x1="52" y1="52" x2="92" y2="92" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#c9a97a" stop-opacity=".35"/>
-            <stop offset="100%" stop-color="#8a6040" stop-opacity=".15"/>
-          </linearGradient>
-          <!-- Золотой металлик для К -->
-          <linearGradient id="kGold" x1="23" y1="20" x2="70" y2="76" gradientUnits="userSpaceOnUse">
-            <stop offset="0%"   stop-color="#f8e898"/>
-            <stop offset="15%"  stop-color="#d4aa42"/>
-            <stop offset="38%"  stop-color="#c9a97a"/>
-            <stop offset="55%"  stop-color="#7a5818"/>
-            <stop offset="75%"  stop-color="#c9a97a"/>
-            <stop offset="90%"  stop-color="#e8c858"/>
-            <stop offset="100%" stop-color="#f0d878"/>
-          </linearGradient>
-          <!-- Блик-полоса -->
-          <linearGradient id="kShim" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%"   stop-color="rgba(255,252,225,0)"/>
-            <stop offset="40%"  stop-color="rgba(255,252,225,0)"/>
-            <stop offset="50%"  stop-color="rgba(255,252,225,0.72)"/>
-            <stop offset="60%"  stop-color="rgba(255,252,225,0)"/>
-            <stop offset="100%" stop-color="rgba(255,252,225,0)"/>
-          </linearGradient>
-          <!-- Clip под блик -->
-          <clipPath id="kClip">
-            <path d="M 23 20 L 34 20 L 34 45 L 57 20 L 70 20 L 46 48 L 70 76 L 57 76 L 34 51 L 34 76 L 23 76 Z"/>
-          </clipPath>
-        </defs>
-
-        <!-- Фон — 4 плитки -->
-        <rect x="4"  y="4"  width="40" height="40" rx="5" fill="#2a1f14"/>
-        <rect x="52" y="4"  width="40" height="40" rx="5" fill="#2a1f14"/>
-        <rect x="4"  y="52" width="40" height="40" rx="5" fill="#2a1f14"/>
-        <rect x="52" y="52" width="40" height="40" rx="5" fill="#2a1f14"/>
-        <rect x="4"  y="4"  width="40" height="40" rx="5" fill="url(#g1)" opacity=".9"/>
-        <rect x="52" y="52" width="40" height="40" rx="5" fill="url(#g2)" opacity=".9"/>
-
-        <!-- К — нарисованная вручную, золотой металлик -->
-        <path d="M 23 20 L 34 20 L 34 45 L 57 20 L 70 20 L 46 48 L 70 76 L 57 76 L 34 51 L 34 76 L 23 76 Z"
-              fill="url(#kGold)"/>
-
-        <!-- Тонкая тёмная окантовка для глубины -->
-        <path d="M 23 20 L 34 20 L 34 45 L 57 20 L 70 20 L 46 48 L 70 76 L 57 76 L 34 51 L 34 76 L 23 76 Z"
-              fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="0.8"/>
-
-        <!-- Скользящий блик -->
-        <rect class="k-shimmer" x="-30" y="16" width="60" height="64"
-              fill="url(#kShim)" clip-path="url(#kClip)"/>
-
-        <!-- Угловые точки -->
-        <circle cx="4"  cy="4"  r="2" fill="#c9a97a" opacity=".4"/>
-        <circle cx="92" cy="4"  r="2" fill="#c9a97a" opacity=".4"/>
-        <circle cx="4"  cy="92" r="2" fill="#c9a97a" opacity=".4"/>
-        <circle cx="92" cy="92" r="2" fill="#c9a97a" opacity=".4"/>
-      </svg>
+      <canvas id="logoK" class="logo-svg" width="96" height="96"></canvas>
     </div>
 
     <div class="brand-name">Кератон</div>
@@ -931,6 +866,136 @@ footer {
     document.head.appendChild(script);
   })();
 
+
+  // Логотип К — сборка из золотых плиток
+  (function(){
+    const cvs = document.getElementById('logoK');
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
+    const S = 96, GRID = 8, CELL = S / GRID; // 12px на клетку
+
+    // Определяем какие ячейки попадают внутрь формы К
+    const ofc = Object.assign(document.createElement('canvas'), {width:S, height:S});
+    const oCtx = ofc.getContext('2d');
+    oCtx.beginPath();
+    oCtx.moveTo(23,20); oCtx.lineTo(34,20); oCtx.lineTo(34,45);
+    oCtx.lineTo(57,20); oCtx.lineTo(70,20); oCtx.lineTo(46,48);
+    oCtx.lineTo(70,76); oCtx.lineTo(57,76); oCtx.lineTo(34,51);
+    oCtx.lineTo(34,76); oCtx.lineTo(23,76); oCtx.closePath();
+
+    const hitCells = [];
+    for (let r=0; r<GRID; r++) for (let c=0; c<GRID; c++) {
+      if (oCtx.isPointInPath(c*CELL+CELL/2, r*CELL+CELL/2))
+        hitCells.push({r, c, fx:c*CELL, fy:r*CELL});
+    }
+
+    function randPos() {
+      const side=~~(Math.random()*4), pad=S*0.8+Math.random()*S;
+      if (side===0) return {x:(Math.random()*3-1)*S, y:-pad};
+      if (side===1) return {x:S+pad, y:(Math.random()*3-1)*S};
+      if (side===2) return {x:(Math.random()*3-1)*S, y:S+pad};
+      return {x:-pad, y:(Math.random()*3-1)*S};
+    }
+
+    const tiles = hitCells.map(h => {
+      const p=randPos();
+      return {...h, x:p.x, y:p.y, tx:p.x, ty:p.y, spd:0.07+Math.random()*0.07, delay:0};
+    });
+
+    const ST={WAIT:0,ASSEMBLE:1,HOLD:2,DISPERSE:3};
+    let state=ST.WAIT, timer=0, shimT=0;
+
+    function startAssemble() {
+      state=ST.ASSEMBLE; timer=0;
+      tiles.forEach(t => {
+        const p=randPos(); t.x=p.x; t.y=p.y; t.tx=p.x; t.ty=p.y;
+        t.delay=(t.r+t.c)*3; // диагональная волна
+      });
+    }
+
+    function startDisperse() {
+      state=ST.DISPERSE; timer=0;
+      const cx=S/2, cy=S/2;
+      tiles.forEach(t => {
+        const dx=(t.x-cx)||1, dy=(t.y-cy)||1, d=Math.sqrt(dx*dx+dy*dy);
+        const dist=S*(0.9+Math.random()*1.1);
+        t.tx=t.x+(dx/d)*dist; t.ty=t.y+(dy/d)*dist;
+      });
+    }
+
+    startAssemble();
+
+    function drawBG() {
+      // 4 фоновых квадрата
+      ctx.fillStyle='#2a1f14';
+      [[4,4],[52,4],[4,52],[52,52]].forEach(([x,y])=>ctx.fillRect(x,y,40,40));
+      // Золотой акцент по диагонали
+      [[4,4],[52,52]].forEach(([x,y])=>{
+        const g=ctx.createLinearGradient(x,y,x+40,y+40);
+        g.addColorStop(0,'rgba(201,169,122,0.32)');
+        g.addColorStop(1,'rgba(138,96,64,0.12)');
+        ctx.fillStyle=g; ctx.fillRect(x,y,40,40);
+      });
+      // Угловые точки
+      ctx.fillStyle='rgba(201,169,122,0.4)';
+      [[4,4],[92,4],[4,92],[92,92]].forEach(([x,y])=>{
+        ctx.beginPath(); ctx.arc(x,y,2,0,Math.PI*2); ctx.fill();
+      });
+    }
+
+    function draw() {
+      requestAnimationFrame(draw);
+      ctx.clearRect(0,0,S,S);
+      timer++; shimT+=0.018;
+      drawBG();
+
+      if (state===ST.ASSEMBLE) {
+        let done=true;
+        tiles.forEach(t=>{
+          if(timer>t.delay){t.tx=t.fx;t.ty=t.fy;}else done=false;
+          if(Math.abs(t.x-t.fx)>0.8||Math.abs(t.y-t.fy)>0.8) done=false;
+        });
+        if(done){state=ST.HOLD;timer=0;}
+      }
+      else if(state===ST.HOLD     && timer>340) startDisperse();
+      else if(state===ST.DISPERSE && timer>85)  {state=ST.WAIT;timer=0;}
+      else if(state===ST.WAIT     && timer>30)  startAssemble();
+
+      const GP=1.2;
+      tiles.forEach(t=>{
+        t.x+=(t.tx-t.x)*t.spd; t.y+=(t.ty-t.y)*t.spd;
+        const tx=~~t.x, ty=~~t.y, tw=CELL-GP, th=CELL-GP;
+
+        // Золотой градиент плитки
+        const g=ctx.createLinearGradient(tx,ty,tx+tw,ty+th);
+        g.addColorStop(0,'#f8e898');
+        g.addColorStop(0.22,'#d4aa42');
+        g.addColorStop(0.5,'#c9a97a');
+        g.addColorStop(0.75,'#7a5818');
+        g.addColorStop(1,'#e8c858');
+        ctx.fillStyle=g; ctx.fillRect(tx,ty,tw,th);
+
+        // Верхний блик
+        ctx.fillStyle='rgba(255,252,230,0.3)';
+        ctx.fillRect(tx,ty,tw,2);
+        // Нижняя тень
+        ctx.fillStyle='rgba(0,0,0,0.25)';
+        ctx.fillRect(tx,ty+th-2,tw,2);
+
+        // Скользящий блик по всей К (только когда собрана)
+        if(state===ST.HOLD){
+          const shimX=(Math.sin(shimT)*0.5+0.5)*S;
+          const dist=Math.abs(tx+tw/2-shimX);
+          const lit=Math.max(0,1-dist/(CELL*1.8));
+          if(lit>0.01){
+            ctx.fillStyle=`rgba(255,252,230,${(lit*0.6).toFixed(2)})`;
+            ctx.fillRect(tx,ty,tw,th);
+          }
+        }
+      });
+    }
+    draw();
+  })();
 
   // 3D плавающие плитки — Дагестан, Кавказ, Каспий
   (function(){
