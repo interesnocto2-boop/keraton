@@ -83,22 +83,11 @@ body {
 }
 
 /* фоновые плитки */
-.hero-tiles {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  grid-template-rows: repeat(6, 1fr);
-  gap: 2px;
-  opacity: .06;
-  pointer-events: none;
-  z-index: 0;
+#heroBg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0; pointer-events: none;
 }
-.hero-tiles span {
-  background: #c9a97a;
-  border-radius: 2px;
-}
-.hero-tiles span:nth-child(odd) { background: #8a6040; }
 
 .hero-content {
   position: relative;
@@ -294,15 +283,7 @@ footer {
 <body>
 
 <section class="hero">
-  <!-- фоновые плитки -->
-  <div class="hero-tiles">
-    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-  </div>
+  <canvas id="heroBg"></canvas>
 
   <div class="hero-content">
     <!-- LOGO -->
@@ -907,6 +888,129 @@ footer {
       (function animate(){requestAnimationFrame(animate);renderer.render(scene,camera);})();
     };
     document.head.appendChild(script);
+  })();
+
+  // 3D плавающие плитки — фон героя
+  (function(){
+    const cvs = document.getElementById('heroBg');
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
+
+    // Палитра — реальные цвета плитки и натурального камня
+    const PALETTE = [
+      {top:[245,240,232], mid:[228,220,208], bot:[190,182,168], edge:[160,150,135]}, // Калакатта мрамор
+      {top:[215,200,162], mid:[198,182,144], bot:[168,152,114], edge:[130,112,80]},  // Травертин
+      {top:[72,68,58],    mid:[56,52,44],    bot:[38,35,28],    edge:[25,22,16]},    // Антрацит
+      {top:[210,105,62],  mid:[188,85,46],   bot:[155,65,32],   edge:[120,48,22]},  // Терракота
+      {top:[215,185,138], mid:[198,168,118], bot:[168,138,88],  edge:[140,108,64]}, // Дорадо золото
+      {top:[158,172,158], mid:[138,155,138], bot:[110,125,110], edge:[82,96,82]},   // Сейдж зелёный
+      {top:[245,242,238], mid:[232,228,222], bot:[205,200,192], edge:[175,168,158]},// Бьянко белый
+      {top:[100,92,80],   mid:[80,74,64],    bot:[58,52,44],    edge:[40,35,28]},   // Сланец
+      {top:[185,158,200], mid:[165,138,182], bot:[135,108,152], edge:[108,82,125]}, // Лиловый мрамор
+      {top:[120,165,175], mid:[100,145,158], bot:[75,118,130],  edge:[50,90,102]},  // Голубой камень
+    ];
+
+    function resize() {
+      cvs.width  = cvs.offsetWidth;
+      cvs.height = cvs.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function W(){ return cvs.width; }
+    function H(){ return cvs.height; }
+
+    function newTile(startBelow) {
+      const p = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+      const w = 70 + Math.random() * 90;
+      const aspect = 0.5 + Math.random() * 1.0; // квадрат или прямоугольник
+      const h = w * aspect;
+      return {
+        x: 30 + Math.random() * (W() - 60),
+        y: startBelow ? H() + h + Math.random() * 200 : -h - Math.random() * H(),
+        w, h, p,
+        tilt: 0.35 + Math.random() * 0.45,    // сжатие по Y для 3D-наклона
+        rotZ: (Math.random() - 0.5) * 38 * Math.PI/180,
+        vy: -(0.18 + Math.random() * 0.32),   // скорость вверх
+        vx: (Math.random() - 0.5) * 0.18,
+        wobble: Math.random() * Math.PI * 2,
+        wobbleAmp: 0.008 + Math.random() * 0.012,
+        opacity: 0.07 + Math.random() * 0.13,
+      };
+    }
+
+    // Запускаем 22 плитки сразу, разброс по всему экрану
+    const tiles = Array.from({length:22}, () => {
+      const t = newTile(false);
+      t.y = Math.random() * H();
+      return t;
+    });
+
+    function drawTile(t) {
+      const {x, y, w, h, p, tilt, rotZ, wobble, wobbleAmp, opacity} = t;
+      const rot = rotZ + Math.sin(wobble) * wobbleAmp;
+
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+      ctx.scale(1, tilt); // 3D наклон
+
+      const hw = w/2, hh = h/2;
+
+      // Лицевая поверхность — градиент камня
+      const face = ctx.createLinearGradient(-hw, -hh, hw, hh);
+      face.addColorStop(0,    `rgb(${p.top[0]},${p.top[1]},${p.top[2]})`);
+      face.addColorStop(0.42, `rgb(${p.mid[0]},${p.mid[1]},${p.mid[2]})`);
+      face.addColorStop(1,    `rgb(${p.bot[0]},${p.bot[1]},${p.bot[2]})`);
+      ctx.fillStyle = face;
+      ctx.beginPath();
+      ctx.rect(-hw, -hh, w, h);
+      ctx.fill();
+
+      // Блик — светлая полоса сверху-слева
+      const shine = ctx.createLinearGradient(-hw, -hh, 0, 0);
+      shine.addColorStop(0, 'rgba(255,250,240,0.28)');
+      shine.addColorStop(1, 'rgba(255,250,240,0)');
+      ctx.fillStyle = shine;
+      ctx.fill();
+
+      // Нижний торец (глубина/тень)
+      const edgeH = Math.max(3, h * 0.07);
+      ctx.fillStyle = `rgb(${p.edge[0]},${p.edge[1]},${p.edge[2]})`;
+      ctx.fillRect(-hw, hh - edgeH, w, edgeH);
+
+      // Правый торец
+      const edgeW = Math.max(2, w * 0.05);
+      const rEdge = ctx.createLinearGradient(hw - edgeW, 0, hw, 0);
+      rEdge.addColorStop(0, `rgba(${p.edge[0]},${p.edge[1]},${p.edge[2]},0)`);
+      rEdge.addColorStop(1, `rgba(${p.edge[0]},${p.edge[1]},${p.edge[2]},0.8)`);
+      ctx.fillStyle = rEdge;
+      ctx.fillRect(hw - edgeW, -hh, edgeW, h);
+
+      // Тонкая рамка стыка
+      ctx.strokeStyle = 'rgba(255,245,220,0.12)';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.rect(-hw, -hh, w, h);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W(), H());
+      const h = H();
+      tiles.forEach(t => {
+        t.y += t.vy;
+        t.x += t.vx;
+        t.wobble += 0.006;
+        if (t.y < -t.h * 3) Object.assign(t, newTile(true));
+        drawTile(t);
+      });
+    }
+
+    (function loop(){ requestAnimationFrame(loop); draw(); })();
   })();
 
   // Индикатор режима работы
