@@ -628,7 +628,13 @@ footer {
   };
   document.getElementById('cbClose').onclick = () => win.classList.remove('open');
 
-  setTimeout(() => { document.getElementById('cbBadge').style.display = 'flex'; }, 8000);
+  setTimeout(() => {
+    if (!win.classList.contains('open')) {
+      win.classList.add('open');
+      document.getElementById('cbBadge').style.display = 'none';
+      start();
+    }
+  }, 4000);
 })();
 </script>
 
