@@ -89,10 +89,28 @@ body {
 }
 
 /* фоновые плитки */
-#heroBg {
+.hero-tiles {
   position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  z-index: 0; pointer-events: none;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 2px; opacity: .05; pointer-events: none; z-index: 0;
+}
+.hero-tiles span { background: #c9a97a; border-radius: 2px; }
+.hero-tiles span:nth-child(odd) { background: #8a6040; }
+
+/* Блок мозаики гор */
+.mosaic-sect {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 24px 48px; gap: 14px;
+}
+.mosaic-label {
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: #7a6a52; font-family: 'Manrope', sans-serif;
+}
+#mosaicCvs {
+  width: 100%; max-width: 480px; display: block;
+  border-radius: 12px; overflow: hidden;
 }
 
 .hero-content {
@@ -289,7 +307,14 @@ footer {
 <body>
 
 <section class="hero">
-  <canvas id="heroBg"></canvas>
+  <div class="hero-tiles">
+    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+  </div>
 
   <div class="hero-content">
     <!-- LOGO -->
@@ -405,6 +430,12 @@ footer {
     </div>
   </div>
 </section>
+
+<!-- MOUNTAIN MOSAIC -->
+<div class="mosaic-sect">
+  <div class="mosaic-label">Горы Дагестана</div>
+  <canvas id="mosaicCvs"></canvas>
+</div>
 
 <div class="divider"></div>
 
@@ -930,81 +961,78 @@ footer {
     document.head.appendChild(script);
   })();
 
-  // Исламская мозаика — плитки собираются в узор
+  // Мозаика гор Дагестана
   (function(){
-    const cvs = document.getElementById('heroBg');
+    const cvs = document.getElementById('mosaicCvs');
     if (!cvs) return;
     const ctx = cvs.getContext('2d');
+    const GP = 1;
 
-    const TS = 28, GP = 2; // размер плитки и шов
+    // Цвета: небо, снег, дальние горы, средние, ближние, золото заката
+    const C = ['#151c28','#e8e2d6','#3a4e68','#c9a97a','#5a4030','#2a1c0e'];
+    //          0=небо    1=снег    2=дальние  3=закат    4=средние  5=ближние
 
-    // Палитра — золото, слоновая кость, морской, терракота
-    const dk = '#16120a', tb = '#1e3848', gd = '#c9a97a',
-          lg = '#e8d498', iv = '#f0e8d8', tr = '#a84830';
-
-    // 8×8 повторяющаяся единица — исламская звезда
-    const UNIT = [
-      [dk, dk, gd, lg, lg, gd, dk, dk],
-      [dk, tb, tb, gd, gd, tb, tb, dk],
-      [gd, tb, iv, gd, gd, iv, tb, gd],
-      [lg, gd, gd, tr, tr, gd, gd, lg],
-      [lg, gd, gd, tr, tr, gd, gd, lg],
-      [gd, tb, iv, gd, gd, iv, tb, gd],
-      [dk, tb, tb, gd, gd, tb, tb, dk],
-      [dk, dk, gd, lg, lg, gd, dk, dk],
+    // Горы Дагестана — пиксель-арт 20×10
+    const MAP = [
+      [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,1,2,1,0,0,0,0,0,0,0,0,1,0,0,0],
+      [0,0,0,0,1,2,2,2,1,0,0,0,0,0,0,1,2,1,0,0],
+      [0,0,0,1,2,2,2,2,2,1,0,0,0,0,1,2,2,2,1,0],
+      [0,0,1,2,2,2,2,2,2,2,1,0,0,1,2,2,2,2,2,1],
+      [0,1,2,2,2,2,2,2,2,3,3,1,1,2,2,2,2,2,4,4],
+      [0,2,2,2,2,2,2,2,3,3,3,3,3,3,2,2,4,4,4,4],
+      [0,2,2,2,2,2,3,3,3,3,4,4,4,4,4,4,4,5,5,5],
+      [0,4,4,4,3,3,3,4,4,4,4,4,5,5,5,5,5,5,5,5],
+      [5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],
     ];
 
-    let tiles = [], W = 0, H = 0;
+    const ROWS = MAP.length, COLS = MAP[0].length;
+    let tiles = [], TS = 20, W = 0, H = 0;
 
     function scat(t) {
-      const side = ~~(Math.random() * 4);
-      const pad = TS * (3 + Math.random() * 12);
-      let x, y;
-      if (side === 0)      { x = Math.random()*W; y = -pad; }
-      else if (side === 1) { x = W+pad; y = Math.random()*H; }
-      else if (side === 2) { x = Math.random()*W; y = H+pad; }
-      else                 { x = -pad; y = Math.random()*H; }
-      t.x = t.tx = x; t.y = t.ty = y;
+      const side = ~~(Math.random()*4), pad = TS*(2+Math.random()*10);
+      if      (side===0) { t.x=t.tx=Math.random()*W; t.y=t.ty=-pad; }
+      else if (side===1) { t.x=t.tx=W+pad; t.y=t.ty=Math.random()*H; }
+      else if (side===2) { t.x=t.tx=Math.random()*W; t.y=t.ty=H+pad; }
+      else               { t.x=t.tx=-pad; t.y=t.ty=Math.random()*H; }
     }
 
     function build() {
-      W = cvs.width  = cvs.offsetWidth;
-      H = cvs.height = cvs.offsetHeight;
-      const cols = Math.ceil(W/TS)+1, rows = Math.ceil(H/TS)+1;
+      W = cvs.offsetWidth;
+      TS = Math.max(14, Math.floor(W / COLS));
+      H = TS * ROWS;
+      cvs.width = W; cvs.height = H;
+      cvs.style.height = H + 'px';
       tiles = [];
-      for (let r=0; r<rows; r++) for (let c=0; c<cols; c++) {
+      for (let r=0; r<ROWS; r++) for (let c=0; c<COLS; c++) {
         const t = { fx:c*TS, fy:r*TS, x:0,y:0, tx:0,ty:0,
-                    color: UNIT[r%8][c%8], col:c, row:r,
-                    spd: 0.07+Math.random()*0.07, delay:0 };
+                    color:C[MAP[r][c]], col:c, row:r,
+                    spd:0.07+Math.random()*0.06, delay:0 };
         scat(t); tiles.push(t);
       }
     }
     build();
     window.addEventListener('resize', build);
 
-    const ST = {WAIT:0, ASSEMBLE:1, HOLD:2, DISPERSE:3};
-    let state = ST.WAIT, timer = 0;
+    const ST = {WAIT:0,ASSEMBLE:1,HOLD:2,DISPERSE:3};
+    let state=ST.WAIT, timer=0;
 
     function startAssemble() {
-      state = ST.ASSEMBLE; timer = 0;
+      state=ST.ASSEMBLE; timer=0;
       tiles.forEach(t => {
         scat(t);
-        // волна от центра — сначала центральные, потом края
-        const dcx = Math.abs(t.col - Math.floor(W/TS/2));
-        const dcy = Math.abs(t.row - Math.floor(H/TS/2));
-        t.delay = (dcx + dcy) * 2.8;
+        // снизу вверх — горы вырастают из земли
+        t.delay = (ROWS - t.row) * 4 + t.col * 0.5;
       });
     }
 
     function startDisperse() {
-      state = ST.DISPERSE; timer = 0;
-      const cx = W/2, cy = H/2;
+      state=ST.DISPERSE; timer=0;
+      const cx=W/2, cy=H/2;
       tiles.forEach(t => {
-        const dx = (t.x-cx)||1, dy = (t.y-cy)||1;
-        const d = Math.sqrt(dx*dx+dy*dy);
-        const dist = 350+Math.random()*350;
-        t.tx = t.x+(dx/d)*dist;
-        t.ty = t.y+(dy/d)*dist;
+        const dx=(t.x-cx)||1, dy=(t.y-cy)||1, d=Math.sqrt(dx*dx+dy*dy);
+        const dist=280+Math.random()*280;
+        t.tx=t.x+(dx/d)*dist; t.ty=t.y+(dy/d)*dist;
       });
     }
 
@@ -1015,28 +1043,28 @@ footer {
       ctx.clearRect(0,0,W,H);
       timer++;
 
-      if (state === ST.ASSEMBLE) {
-        let done = true;
+      if (state===ST.ASSEMBLE) {
+        let done=true;
         tiles.forEach(t => {
-          if (timer > t.delay) { t.tx = t.fx; t.ty = t.fy; }
-          else done = false;
-          if (Math.abs(t.x-t.fx)>2 || Math.abs(t.y-t.fy)>2) done = false;
+          if (timer>t.delay) { t.tx=t.fx; t.ty=t.fy; } else done=false;
+          if (Math.abs(t.x-t.fx)>1.5||Math.abs(t.y-t.fy)>1.5) done=false;
         });
-        if (done) { state = ST.HOLD; timer = 0; }
+        if (done) { state=ST.HOLD; timer=0; }
       }
-      else if (state === ST.HOLD   && timer > 280) startDisperse();
-      else if (state === ST.DISPERSE && timer > 120) { state = ST.WAIT; timer = 0; }
-      else if (state === ST.WAIT   && timer > 40)  startAssemble();
+      else if (state===ST.HOLD     && timer>320) startDisperse();
+      else if (state===ST.DISPERSE && timer>130) { state=ST.WAIT; timer=0; }
+      else if (state===ST.WAIT     && timer>50)  startAssemble();
 
       tiles.forEach(t => {
-        t.x += (t.tx-t.x)*t.spd;
-        t.y += (t.ty-t.y)*t.spd;
+        t.x+=(t.tx-t.x)*t.spd; t.y+=(t.ty-t.y)*t.spd;
         if (t.x<-TS||t.x>W+TS||t.y<-TS||t.y>H+TS) return;
-        ctx.fillStyle = t.color;
+        ctx.fillStyle=t.color;
         ctx.fillRect(~~t.x, ~~t.y, TS-GP, TS-GP);
-        // верхний блик
-        ctx.fillStyle = 'rgba(255,242,205,0.09)';
-        ctx.fillRect(~~t.x, ~~t.y, TS-GP, 2);
+        // блик на снегу
+        if (t.color===C[1]) {
+          ctx.fillStyle='rgba(255,250,245,0.4)';
+          ctx.fillRect(~~t.x, ~~t.y, TS-GP, 2);
+        }
       });
     }
     draw();
