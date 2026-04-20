@@ -912,11 +912,9 @@ footer {
     transition: transform .2s, box-shadow .2s; border: none;
   }
   .cb-bubble:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(201,169,122,.55); }
-  @keyframes cb-glow { 0%,100%{ box-shadow: 0 4px 20px rgba(37,211,102,.4); } 50%{ box-shadow: 0 4px 28px rgba(37,211,102,.9), 0 0 0 10px rgba(37,211,102,.15); } }
-  @keyframes cb-dot-ping { 0%{ transform:scale(1); opacity:1; } 100%{ transform:scale(2.5); opacity:0; } }
-  .cb-bubble.pulse { animation: cb-glow 1.2s ease-in-out infinite; }
-  .cb-green-dot { position:fixed; bottom:55px; left:55px; z-index:1000; width:13px; height:13px; border-radius:50%; background:#25d366; border:2px solid #0f0d0a; display:none; }
-  .cb-green-dot::after { content:''; position:absolute; inset:-3px; border-radius:50%; background:#25d366; animation: cb-dot-ping 1.2s ease-out infinite; }
+  @keyframes cb-ring { 0%{ box-shadow: 0 0 0 0 rgba(37,211,102,.6), 0 4px 20px rgba(37,211,102,.3); } 70%{ box-shadow: 0 0 0 14px rgba(37,211,102,0), 0 4px 24px rgba(37,211,102,.5); } 100%{ box-shadow: 0 0 0 0 rgba(37,211,102,0), 0 4px 20px rgba(37,211,102,.3); } }
+  .cb-bubble.pulse { animation: cb-ring 1.4s ease-out infinite; border: 2px solid rgba(37,211,102,.6) !important; }
+  .cb-green-dot { position:fixed; bottom:72px; left:72px; z-index:1000; width:13px; height:13px; border-radius:50%; background:#25d366; border:2px solid #0f0d0a; display:none; }
   .cb-green-dot.show { display:block; }
   .cb-badge {
     position: absolute; top: -4px; right: -4px;
