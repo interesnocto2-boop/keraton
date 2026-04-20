@@ -629,12 +629,10 @@ footer {
   document.getElementById('cbClose').onclick = () => win.classList.remove('open');
 
   setTimeout(() => {
-    if (!win.classList.contains('open')) {
-      win.classList.add('open');
-      document.getElementById('cbBadge').style.display = 'none';
-      start();
-    }
-  }, 4000);
+    win.classList.add('open');
+    document.getElementById('cbBadge').style.display = 'none';
+    start();
+  }, 1000);
 })();
 </script>
 
