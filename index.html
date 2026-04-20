@@ -388,25 +388,16 @@ footer {
 <div class="divider"></div>
 
 <div class="map-section">
-  <div class="map-label">Мы на карте</div>
-  <!-- 2D Визуализатор комнаты -->
+  <div class="map-label">3D Визуализатор комнаты</div>
   <div style="border:1px solid rgba(201,169,122,.15);border-radius:16px;overflow:hidden;background:#0f0d0a;">
-    <div style="padding:12px 16px;border-bottom:1px solid rgba(201,169,122,.1);display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <div style="font-size:12px;font-weight:600;color:#f0e8d8;">Визуализатор комнаты</div>
-        <div style="font-size:10px;color:#7a6a52;letter-spacing:0.06em;">Выберите плитку и посмотрите результат</div>
-      </div>
-      <div style="display:flex;gap:6px;">
-        <button onclick="setView('room')" id="vbRoom" style="font-family:'Manrope',sans-serif;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(201,169,122,.3);background:rgba(201,169,122,.15);color:#c9a97a;">Комната</button>
-        <button onclick="setView('floor')" id="vbFloor" style="font-family:'Manrope',sans-serif;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.08);background:transparent;color:#7a6a52;">Пол</button>
-      </div>
+    <div style="padding:10px 16px;border-bottom:1px solid rgba(201,169,122,.1);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:11px;color:#7a6a52;">🖱 Тяните для вращения · прокрутка для зума</div>
+      <div id="tile3dName" style="font-size:12px;font-weight:600;color:#c9a97a;">Мрамор белый</div>
     </div>
-
-    <canvas id="roomCanvas" width="568" height="280" style="width:100%;display:block;cursor:pointer;"></canvas>
-
+    <div id="three-container" style="width:100%;height:300px;"></div>
     <div style="padding:12px 16px;border-top:1px solid rgba(201,169,122,.1);">
       <div style="font-size:10px;color:#7a6a52;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">Выберите плитку</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;" id="swatches"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;" id="swatches3d"></div>
     </div>
   </div>
   <a href="https://yandex.com/maps/-/CPCzv4n6" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:13px 20px;background:rgba(201,169,122,.1);border:1px solid rgba(201,169,122,.25);border-radius:12px;color:#c9a97a;font-size:14px;font-weight:600;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='rgba(201,169,122,.2)'" onmouseout="this.style.background='rgba(201,169,122,.1)'">
@@ -681,9 +672,9 @@ footer {
 </div>
 
 <script>
-  // Визуализатор комнаты
+  // 3D Визуализатор комнаты
   (function(){
-    const tiles = [
+    const tiles3d = [
       {name:'Мрамор белый',   floor:'#e8e0d0', wall:'#ede7db', grout:'#ccc4b8', pattern:'marble'},
       {name:'Травертин',      floor:'#d4c4a0', wall:'#ddd0b0', grout:'#b8a880', pattern:'plain'},
       {name:'Базальт тёмный', floor:'#3a3530', wall:'#403c38', grout:'#2a2620', pattern:'plain'},
@@ -694,157 +685,161 @@ footer {
       {name:'Сланец чёрный',  floor:'#28241e', wall:'#302c26', grout:'#1a1814', pattern:'plain'},
     ];
 
-    let current = 0;
-    let view = 'room';
+    let currentTile = 0;
 
-    const canvas = document.getElementById('roomCanvas');
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-
-    function drawTilePattern(ctx, x, y, w, h, tile, size) {
-      const cols = Math.ceil(w / size) + 1;
-      const rows = Math.ceil(h / size) + 1;
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const tx = x + c * size, ty = y + r * size;
-          ctx.fillStyle = tile.floor;
-          if (tile.pattern === 'marble') {
-            ctx.fillStyle = (r + c) % 2 === 0 ? tile.floor : tile.wall;
-          } else if (tile.pattern === 'wood') {
-            ctx.fillStyle = c % 2 === 0 ? tile.floor : tile.wall;
-          } else if (tile.pattern === 'mosaic') {
-            const s2 = size / 3;
-            for (let mr = 0; mr < 3; mr++) for (let mc = 0; mc < 3; mc++) {
-              ctx.fillStyle = (mr + mc) % 2 === 0 ? tile.floor : tile.wall;
-              ctx.fillRect(tx + mc*s2 + 1, ty + mr*s2 + 1, s2 - 1, s2 - 1);
-            }
-            ctx.strokeStyle = tile.grout; ctx.lineWidth = 1;
-            ctx.strokeRect(tx + .5, ty + .5, size - 1, size - 1);
-            continue;
-          }
-          ctx.fillRect(tx + 1, ty + 1, size - 2, size - 2);
-          ctx.strokeStyle = tile.grout; ctx.lineWidth = 1;
-          ctx.strokeRect(tx + .5, ty + .5, size - 1, size - 1);
+    function makeTex(tile) {
+      const c = document.createElement('canvas'); c.width = c.height = 256;
+      const x = c.getContext('2d');
+      const size = tile.pattern === 'mosaic' ? 32 : 64;
+      const cols = Math.ceil(256/size), rows = Math.ceil(256/size);
+      for (let r=0;r<rows;r++) for (let cl=0;cl<cols;cl++) {
+        let col = tile.floor;
+        if (tile.pattern==='marble') col = (r+cl)%2===0?tile.floor:tile.wall;
+        else if (tile.pattern==='wood') col = cl%2===0?tile.floor:tile.wall;
+        else if (tile.pattern==='mosaic') {
+          const s2=size/2;
+          [[0,0,tile.floor],[s2,0,tile.wall],[0,s2,tile.wall],[s2,s2,tile.floor]].forEach(([dx,dy,fc])=>{
+            x.fillStyle=fc; x.fillRect(cl*size+dx+1,r*size+dy+1,s2-2,s2-2);
+          });
+          x.strokeStyle=tile.grout; x.lineWidth=1;
+          x.strokeRect(cl*size+.5,r*size+.5,size-1,size-1);
+          continue;
         }
+        x.fillStyle=col; x.fillRect(cl*size+1,r*size+1,size-2,size-2);
+        x.strokeStyle=tile.grout; x.lineWidth=1.5;
+        x.strokeRect(cl*size+.5,r*size+.5,size-1,size-1);
       }
+      return c;
     }
 
-    function drawRoom() {
-      const t = tiles[current];
-      ctx.clearRect(0, 0, W, H);
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js';
+    script.onload = () => {
+      const THREE = window.THREE;
+      const container = document.getElementById('three-container');
+      const W = container.clientWidth, H = 300;
 
-      if (view === 'floor') {
-        // Вид сверху — только пол
-        ctx.fillStyle = '#0f0d0a';
-        ctx.fillRect(0, 0, W, H);
-        ctx.save();
-        ctx.beginPath(); ctx.rect(20, 20, W-40, H-40); ctx.clip();
-        drawTilePattern(ctx, 20, 20, W-40, H-40, t, 48);
-        ctx.restore();
-        ctx.strokeStyle = 'rgba(201,169,122,.2)'; ctx.lineWidth = 1;
-        ctx.strokeRect(20, 20, W-40, H-40);
+      const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+      renderer.setSize(W, H);
+      renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+      renderer.shadowMap.enabled = true;
+      container.appendChild(renderer.domElement);
 
-        ctx.fillStyle = 'rgba(201,169,122,.5)';
-        ctx.font = '11px Manrope, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('Вид сверху · ' + t.name, W/2, H - 8);
-        return;
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0f0d0a);
+      scene.fog = new THREE.Fog(0x0f0d0a, 12, 22);
+
+      const camera = new THREE.PerspectiveCamera(50, W/H, 0.1, 100);
+      camera.position.set(4, 3, 5);
+      camera.lookAt(0, 1, 0);
+
+      // Свет
+      scene.add(new THREE.AmbientLight(0xf0e0c0, 0.6));
+      const sun = new THREE.DirectionalLight(0xfff0e0, 1.2);
+      sun.position.set(5,8,5); sun.castShadow=true; scene.add(sun);
+      const fill = new THREE.DirectionalLight(0xc0d0ff, 0.3);
+      fill.position.set(-4,2,-3); scene.add(fill);
+
+      function buildTex(tile) {
+        const tex = new THREE.CanvasTexture(makeTex(tile));
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(4,4); return tex;
       }
 
-      // Комната — перспективный вид
-      const floorY = H * 0.55;
-      const vanishX = W / 2, vanishY = H * 0.18;
+      function buildWallTex(tile) {
+        const t2 = {...tile, floor:tile.wall, wall:tile.floor};
+        const tex = new THREE.CanvasTexture(makeTex(t2));
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(3,2); return tex;
+      }
 
-      // Фон — потолок
-      ctx.fillStyle = '#1a1612';
-      ctx.fillRect(0, 0, W, H);
+      // Комната
+      const RW=6, RH=4, RD=6;
+      let floorMesh, wallB, wallL, wallR;
 
-      // Задняя стена
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(W*0.22, vanishY + 20);
-      ctx.lineTo(W*0.78, vanishY + 20);
-      ctx.lineTo(W*0.78, floorY);
-      ctx.lineTo(W*0.22, floorY);
-      ctx.closePath(); ctx.clip();
-      const wallTile = {...t, floor: t.wall, wall: t.floor};
-      drawTilePattern(ctx, W*0.22, vanishY+20, W*0.56, floorY - vanishY - 20, wallTile, 36);
-      ctx.restore();
+      function buildRoom(tile) {
+        if (floorMesh) { scene.remove(floorMesh,wallB,wallL,wallR); }
 
-      // Левая стена
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(0, H*0.1);
-      ctx.lineTo(W*0.22, vanishY + 20);
-      ctx.lineTo(W*0.22, floorY);
-      ctx.lineTo(0, floorY);
-      ctx.closePath(); ctx.clip();
-      ctx.fillStyle = t.wall;
-      ctx.fillRect(0, 0, W*0.22, floorY);
-      drawTilePattern(ctx, 0, H*0.1, W*0.22, floorY - H*0.1, wallTile, 32);
-      ctx.restore();
+        const floorTex = buildTex(tile);
+        const wallTex = buildWallTex(tile);
+        const ceilMat = new THREE.MeshLambertMaterial({color:0x1a1612, side:THREE.BackSide});
+        const floorMat = new THREE.MeshLambertMaterial({map:floorTex});
+        const wallMat = new THREE.MeshLambertMaterial({map:wallTex, side:THREE.BackSide});
 
-      // Правая стена
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(W*0.78, vanishY + 20);
-      ctx.lineTo(W, H*0.1);
-      ctx.lineTo(W, floorY);
-      ctx.lineTo(W*0.78, floorY);
-      ctx.closePath(); ctx.clip();
-      ctx.fillStyle = t.wall;
-      ctx.fillRect(W*0.78, 0, W*0.22, floorY);
-      drawTilePattern(ctx, W*0.78, H*0.1, W*0.22, floorY - H*0.1, wallTile, 32);
-      ctx.restore();
+        // Пол
+        floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(RW,RD), floorMat);
+        floorMesh.rotation.x = -Math.PI/2; floorMesh.receiveShadow=true;
+        scene.add(floorMesh);
 
-      // Пол
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(0, floorY);
-      ctx.lineTo(W, floorY);
-      ctx.lineTo(W, H);
-      ctx.lineTo(0, H);
-      ctx.closePath(); ctx.clip();
-      drawTilePattern(ctx, 0, floorY, W, H - floorY, t, 52);
-      ctx.restore();
+        // Задняя стена
+        wallB = new THREE.Mesh(new THREE.PlaneGeometry(RW,RH), wallMat);
+        wallB.position.set(0,RH/2,-RD/2); scene.add(wallB);
 
-      // Линии стыков стен
-      ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(W*0.22, vanishY+20); ctx.lineTo(W*0.22, floorY); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(W*0.78, vanishY+20); ctx.lineTo(W*0.78, floorY); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0, floorY); ctx.lineTo(W, floorY); ctx.stroke();
+        // Левая стена
+        wallL = new THREE.Mesh(new THREE.PlaneGeometry(RD,RH), wallMat);
+        wallL.position.set(-RW/2,RH/2,0);
+        wallL.rotation.y = Math.PI/2; scene.add(wallL);
 
-      // Название плитки
-      ctx.fillStyle = 'rgba(201,169,122,.7)';
-      ctx.font = '11px Manrope, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(t.name, W/2, H - 8);
-    }
+        // Правая стена
+        wallR = new THREE.Mesh(new THREE.PlaneGeometry(RD,RH), wallMat);
+        wallR.position.set(RW/2,RH/2,0);
+        wallR.rotation.y = -Math.PI/2; scene.add(wallR);
 
-    // Свотчи
-    const sw = document.getElementById('swatches');
-    tiles.forEach((t, i) => {
-      const btn = document.createElement('button');
-      btn.style.cssText = `width:36px;height:36px;border-radius:8px;background:${t.floor};cursor:pointer;border:2px solid ${i===0?'#c9a97a':'rgba(255,255,255,.1)'};transition:border-color .15s;`;
-      btn.title = t.name;
-      btn.onclick = () => {
-        current = i;
-        sw.querySelectorAll('button').forEach((b,j) => b.style.borderColor = j===i?'#c9a97a':'rgba(255,255,255,.1)');
-        drawRoom();
-      };
-      sw.appendChild(btn);
-    });
+        // Потолок
+        const ceil = new THREE.Mesh(new THREE.PlaneGeometry(RW,RD), ceilMat);
+        ceil.rotation.x = Math.PI/2; ceil.position.y = RH; scene.add(ceil);
+      }
 
-    window.setView = (v) => {
-      view = v;
-      document.getElementById('vbRoom').style.background = v==='room'?'rgba(201,169,122,.15)':'transparent';
-      document.getElementById('vbRoom').style.color = v==='room'?'#c9a97a':'#7a6a52';
-      document.getElementById('vbFloor').style.background = v==='floor'?'rgba(201,169,122,.15)':'transparent';
-      document.getElementById('vbFloor').style.color = v==='floor'?'#c9a97a':'#7a6a52';
-      drawRoom();
+      buildRoom(tiles3d[0]);
+
+      // Orbit контроллер (простой, без CDN зависимости)
+      let isDrag=false, lastX=0, lastY=0, theta=0.6, phi=0.5, radius=8;
+      const el = renderer.domElement;
+      el.addEventListener('mousedown', e=>{isDrag=true;lastX=e.clientX;lastY=e.clientY;});
+      el.addEventListener('touchstart', e=>{isDrag=true;lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;},{passive:true});
+      window.addEventListener('mouseup',()=>isDrag=false);
+      window.addEventListener('touchend',()=>isDrag=false);
+      window.addEventListener('mousemove', e=>{
+        if(!isDrag)return;
+        theta -= (e.clientX-lastX)*0.01; phi -= (e.clientY-lastY)*0.008;
+        phi=Math.max(0.15,Math.min(1.2,phi));
+        lastX=e.clientX; lastY=e.clientY; updateCam();
+      });
+      window.addEventListener('touchmove', e=>{
+        if(!isDrag)return;
+        theta -= (e.touches[0].clientX-lastX)*0.01; phi -= (e.touches[0].clientY-lastY)*0.008;
+        phi=Math.max(0.15,Math.min(1.2,phi));
+        lastX=e.touches[0].clientX; lastY=e.touches[0].clientY; updateCam();
+      },{passive:true});
+      el.addEventListener('wheel', e=>{radius=Math.max(4,Math.min(14,radius+e.deltaY*0.01));updateCam();},{passive:true});
+
+      function updateCam() {
+        camera.position.x = radius*Math.sin(theta)*Math.cos(phi);
+        camera.position.y = radius*Math.sin(phi);
+        camera.position.z = radius*Math.cos(theta)*Math.cos(phi);
+        camera.lookAt(0,1,0);
+      }
+      updateCam();
+
+      // Свотчи
+      const sw = document.getElementById('swatches3d');
+      tiles3d.forEach((t,i)=>{
+        const btn = document.createElement('button');
+        btn.style.cssText=`width:36px;height:36px;border-radius:8px;background:${t.floor};cursor:pointer;border:2px solid ${i===0?'#c9a97a':'rgba(255,255,255,.1)'};transition:border-color .15s;`;
+        btn.title=t.name;
+        btn.onclick=()=>{
+          currentTile=i;
+          document.getElementById('tile3dName').textContent=t.name;
+          sw.querySelectorAll('button').forEach((b,j)=>b.style.borderColor=j===i?'#c9a97a':'rgba(255,255,255,.1)');
+          buildRoom(t);
+        };
+        sw.appendChild(btn);
+      });
+
+      // Анимация
+      (function animate(){requestAnimationFrame(animate);renderer.render(scene,camera);})();
     };
-
-    drawRoom();
+    document.head.appendChild(script);
   })();
 
   // Индикатор режима работы
