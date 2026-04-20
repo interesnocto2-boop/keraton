@@ -469,8 +469,9 @@ footer {
   @media(max-width:600px){
     .rv-bubble{ bottom:96px; left:16px; padding:7px 12px; font-size:12px; }
     .rv-window{ width:calc(100vw - 32px); left:16px; bottom:150px; }
-    .calc-bubble{ bottom:96px; right:16px; padding:7px 12px; font-size:12px; }
-    .calc-window{ width:calc(100vw - 32px); right:16px; left:auto; bottom:150px; }
+    .calc-bubble{ bottom:88px; right:16px; width:48px; height:48px; }
+    .calc-window{ width:calc(100vw - 32px); right:16px; left:auto; bottom:148px; max-height:calc(100svh - 160px); }
+    .calc-bubble-tip{ display:none; }
     .cb-bubble{ bottom:16px; left:16px; }
     .wa-fixed{ bottom:16px; right:16px; }
   }
@@ -600,28 +601,38 @@ footer {
 <!-- CALCULATOR POPUP -->
 <style>
   .calc-bubble {
-    position: fixed; bottom: 28px; right: 96px; z-index: 997;
-    background: rgba(201,169,122,.12); border: 1px solid rgba(201,169,122,.25);
-    color: #c9a97a; border-radius: 100px; padding: 8px 16px 8px 12px;
-    font-size: 13px; font-weight: 600; font-family: 'Manrope', sans-serif;
-    cursor: pointer; display: flex; align-items: center; gap: 7px;
-    transition: background .2s; white-space: nowrap;
+    position: fixed; bottom: 96px; right: 28px; z-index: 997;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: #1a5276; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 4px 20px rgba(26,82,118,.5);
+    transition: transform .2s, box-shadow .2s; border: none;
   }
-  .calc-bubble:hover { background: rgba(201,169,122,.22); }
+  .calc-bubble:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(26,82,118,.65); }
+  .calc-bubble-tip {
+    position: fixed; bottom: 108px; right: 92px; z-index: 997;
+    background: rgba(26,82,118,.92); color: #fff;
+    font-size: 12px; font-family: 'Manrope', sans-serif; font-weight: 600;
+    padding: 5px 10px; border-radius: 8px; pointer-events: none;
+    white-space: nowrap; opacity: 0; transition: opacity .3s;
+  }
+  .calc-bubble-tip.show { opacity: 1; }
   .calc-window {
-    position: fixed; bottom: 80px; right: 16px; z-index: 996;
-    width: 300px; background: #1a1510;
+    position: fixed; bottom: 164px; right: 16px; z-index: 996;
+    width: 310px; background: #1a1510;
     border: 1px solid rgba(201,169,122,.15); border-radius: 16px;
     box-shadow: 0 8px 40px rgba(0,0,0,.5); overflow: hidden;
     opacity: 0; pointer-events: none;
     transform: translateY(12px) scale(.97);
     transition: opacity .25s, transform .25s;
+    max-height: calc(100svh - 180px); overflow-y: auto;
   }
   .calc-window.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
   .calc-head {
     background: #0f0d0a; padding: 13px 16px;
     display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid rgba(201,169,122,.1);
+    position: sticky; top: 0; z-index: 1;
   }
   .calc-head-title { font-size: 13px; font-weight: 600; color: #f0e8d8; }
   .calc-head-sub { font-size: 11px; color: #7a6a52; }
@@ -636,6 +647,7 @@ footer {
   }
   .calc-row input:focus, .calc-row select:focus { border-color: #c9a97a; }
   .calc-row select option { background: #1a1510; }
+  .calc-dims { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .calc-btn {
     width: 100%; padding: 12px; background: #c9a97a; color: #0f0d0a;
     border: none; border-radius: 10px; font-size: 13px; font-weight: 700;
@@ -644,34 +656,53 @@ footer {
   .calc-btn:hover { background: #d4ba90; }
   .calc-result {
     background: rgba(201,169,122,.08); border: 1px solid rgba(201,169,122,.2);
-    border-radius: 10px; padding: 12px; display: none;
+    border-radius: 10px; padding: 14px; display: none;
   }
-  .calc-result-title { font-size: 11px; color: #7a6a52; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
-  .calc-result-val { font-size: 22px; font-weight: 700; color: #c9a97a; }
-  .calc-result-sub { font-size: 12px; color: #7a6a52; margin-top: 4px; }
+  .calc-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .calc-result-item { text-align: center; }
+  .calc-result-label { font-size: 10px; color: #7a6a52; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .calc-result-val { font-size: 20px; font-weight: 700; color: #c9a97a; }
+  .calc-result-unit { font-size: 11px; color: #7a6a52; }
+  .calc-result-cost { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(201,169,122,.15); text-align: center; display: none; }
+  .calc-result-cost-val { font-size: 22px; font-weight: 700; color: #f0e8d8; }
+  .calc-result-cost-label { font-size: 11px; color: #7a6a52; margin-top: 2px; }
 </style>
 
-<button class="calc-bubble" id="calcBubble">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
-  Калькулятор плитки
+<button class="calc-bubble" id="calcBubble" title="Калькулятор плитки">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="11" y2="14"/><line x1="8" y1="18" x2="11" y2="18"/><line x1="14" y1="14" x2="17" y2="14"/><line x1="14" y1="18" x2="17" y2="18"/></svg>
 </button>
+<div class="calc-bubble-tip" id="calcTip">Калькулятор плитки</div>
 
 <div class="calc-window" id="calcWindow">
   <div class="calc-head">
     <div>
       <div class="calc-head-title">Калькулятор плитки</div>
-      <div class="calc-head-sub">Узнайте сколько плитки нужно</div>
+      <div class="calc-head-sub">Количество и стоимость</div>
     </div>
     <button class="calc-close" id="calcClose">×</button>
   </div>
   <div class="calc-body">
     <div class="calc-row">
-      <label>Длина помещения (м)</label>
-      <input type="number" id="cLen" placeholder="например 4.5" min="0" step="0.1" />
+      <label>Формат плитки</label>
+      <select id="cFormat">
+        <option value="0.18,1.44,8">30×60 см (8 шт / ~1.44 м²/уп)</option>
+        <option value="0.36,1.44,4" selected>60×60 см (4 шт / ~1.44 м²/уп)</option>
+        <option value="0.54,1.62,3">60×90 см (3 шт / ~1.62 м²/уп)</option>
+        <option value="0.72,1.44,2">120×60 см (2 шт / ~1.44 м²/уп)</option>
+        <option value="1.44,1.44,1">120×120 см (1 шт / ~1.44 м²/уп)</option>
+        <option value="0.09,1.44,16">30×30 см (16 шт / ~1.44 м²/уп)</option>
+        <option value="0.12,1.44,12">20×60 см (12 шт / ~1.44 м²/уп)</option>
+      </select>
     </div>
-    <div class="calc-row">
-      <label>Ширина помещения (м)</label>
-      <input type="number" id="cWid" placeholder="например 3.2" min="0" step="0.1" />
+    <div class="calc-dims">
+      <div class="calc-row">
+        <label>Длина (м)</label>
+        <input type="number" id="cLen" placeholder="4.5" min="0" step="0.1" />
+      </div>
+      <div class="calc-row">
+        <label>Ширина (м)</label>
+        <input type="number" id="cWid" placeholder="3.2" min="0" step="0.1" />
+      </div>
     </div>
     <div class="calc-row">
       <label>Запас на подрезку</label>
@@ -681,11 +712,28 @@ footer {
         <option value="20">20% — диагональная укладка</option>
       </select>
     </div>
+    <div class="calc-row">
+      <label>Цена за м² (₽, необязательно)</label>
+      <input type="number" id="cPrice" placeholder="например 1200" min="0" step="1" />
+    </div>
     <button class="calc-btn" id="calcCalc">Рассчитать</button>
     <div class="calc-result" id="calcResult">
-      <div class="calc-result-title">Вам понадобится</div>
-      <div class="calc-result-val" id="calcVal"></div>
-      <div class="calc-result-sub" id="calcSub"></div>
+      <div class="calc-result-grid">
+        <div class="calc-result-item">
+          <div class="calc-result-label">Площадь с запасом</div>
+          <div class="calc-result-val" id="calcM2"></div>
+          <div class="calc-result-unit">м²</div>
+        </div>
+        <div class="calc-result-item">
+          <div class="calc-result-label">Упаковок</div>
+          <div class="calc-result-val" id="calcBoxes"></div>
+          <div class="calc-result-unit" id="calcPcsHint"></div>
+        </div>
+      </div>
+      <div class="calc-result-cost" id="calcCostBlock">
+        <div class="calc-result-cost-val" id="calcCost"></div>
+        <div class="calc-result-cost-label">примерная стоимость</div>
+      </div>
     </div>
   </div>
 </div>
@@ -888,19 +936,44 @@ footer {
   // Калькулятор плитки
   (function(){
     const win = document.getElementById('calcWindow');
-    document.getElementById('calcBubble').onclick = () => win.classList.toggle('open');
+    const btn = document.getElementById('calcBubble');
+    const tip = document.getElementById('calcTip');
+
+    btn.addEventListener('mouseenter', () => tip.classList.add('show'));
+    btn.addEventListener('mouseleave', () => tip.classList.remove('show'));
+
+    btn.onclick = () => { win.classList.toggle('open'); tip.classList.remove('show'); };
     document.getElementById('calcClose').onclick = () => win.classList.remove('open');
+
     document.getElementById('calcCalc').onclick = () => {
       const len = parseFloat(document.getElementById('cLen').value);
       const wid = parseFloat(document.getElementById('cWid').value);
       const waste = parseInt(document.getElementById('cWaste').value);
+      const price = parseFloat(document.getElementById('cPrice').value) || 0;
       if (!len || !wid || len <= 0 || wid <= 0) { alert('Введите длину и ширину'); return; }
+
+      const [tileSizeStr, boxCovStr, pcsPerBoxStr] = document.getElementById('cFormat').value.split(',');
+      const boxCov = parseFloat(boxCovStr);
+      const pcsPerBox = parseInt(pcsPerBoxStr);
+
       const area = len * wid;
       const total = area * (1 + waste / 100);
-      const res = document.getElementById('calcResult');
-      document.getElementById('calcVal').textContent = total.toFixed(1) + ' м²';
-      document.getElementById('calcSub').textContent = `Площадь ${area.toFixed(1)} м² + ${waste}% запас на подрезку`;
-      res.style.display = 'block';
+      const boxes = Math.ceil(total / boxCov);
+      const pcs = boxes * pcsPerBox;
+
+      document.getElementById('calcM2').textContent = total.toFixed(1);
+      document.getElementById('calcBoxes').textContent = boxes;
+      document.getElementById('calcPcsHint').textContent = pcs + ' шт';
+
+      const costBlock = document.getElementById('calcCostBlock');
+      if (price > 0) {
+        document.getElementById('calcCost').textContent = Math.ceil(total * price).toLocaleString('ru-RU') + ' ₽';
+        costBlock.style.display = 'block';
+      } else {
+        costBlock.style.display = 'none';
+      }
+
+      document.getElementById('calcResult').style.display = 'block';
     };
   })();
 </script>
