@@ -101,9 +101,30 @@ body {
 }
 
 /* ── LOGO ── */
-.logo-wrap { margin-bottom: 28px; }
-
-.logo-svg { width: 96px; height: 96px; }
+.logo-wrap {
+  margin-bottom: 28px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px; height: 100px;
+}
+.logo-wrap::before,
+.logo-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(201,169,122,0.55);
+  animation: logoPulse 2.6s ease-out infinite;
+  pointer-events: none;
+}
+.logo-wrap::after { animation-delay: 1s; border-color: rgba(201,169,122,0.35); }
+@keyframes logoPulse {
+  0%   { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.85); opacity: 0; }
+}
+.logo-svg { width: 100px; height: 100px; }
 
 .brand-name {
   font-family: 'Cormorant Garamond', serif;
@@ -290,37 +311,45 @@ footer {
   <div class="hero-content">
     <!-- LOGO -->
     <div class="logo-wrap">
-      <svg class="logo-svg" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg class="logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="g1" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#c9a97a" stop-opacity=".35"/>
-            <stop offset="100%" stop-color="#8a6040" stop-opacity=".15"/>
-          </linearGradient>
-          <linearGradient id="g2" x1="52" y1="52" x2="92" y2="92" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#c9a97a" stop-opacity=".35"/>
-            <stop offset="100%" stop-color="#8a6040" stop-opacity=".15"/>
-          </linearGradient>
-          <linearGradient id="kGold" x1="23" y1="20" x2="70" y2="76" gradientUnits="userSpaceOnUse">
+          <linearGradient id="bordGold" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
             <stop offset="0%"   stop-color="#f8e898"/>
-            <stop offset="18%"  stop-color="#d4aa42"/>
-            <stop offset="42%"  stop-color="#c9a97a"/>
-            <stop offset="62%"  stop-color="#7a5818"/>
-            <stop offset="82%"  stop-color="#c9a97a"/>
+            <stop offset="35%"  stop-color="#c9a97a"/>
+            <stop offset="70%"  stop-color="#8a6040"/>
+            <stop offset="100%" stop-color="#d4b060"/>
+          </linearGradient>
+          <linearGradient id="kLetGold" x1="35" y1="20" x2="65" y2="80" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#f8e898"/>
+            <stop offset="25%"  stop-color="#d4a840"/>
+            <stop offset="55%"  stop-color="#c9a97a"/>
+            <stop offset="80%"  stop-color="#7a5818"/>
             <stop offset="100%" stop-color="#e8c858"/>
           </linearGradient>
+          <radialGradient id="bgGlow" cx="50%" cy="40%" r="55%">
+            <stop offset="0%"   stop-color="#2a1e10"/>
+            <stop offset="100%" stop-color="#0f0a06"/>
+          </radialGradient>
         </defs>
-        <rect x="4"  y="4"  width="40" height="40" rx="5" fill="#2a1f14"/>
-        <rect x="52" y="4"  width="40" height="40" rx="5" fill="#2a1f14"/>
-        <rect x="4"  y="52" width="40" height="40" rx="5" fill="#2a1f14"/>
-        <rect x="52" y="52" width="40" height="40" rx="5" fill="#2a1f14"/>
-        <rect x="4"  y="4"  width="40" height="40" rx="5" fill="url(#g1)" opacity=".9"/>
-        <rect x="52" y="52" width="40" height="40" rx="5" fill="url(#g2)" opacity=".9"/>
-        <path d="M 23 20 L 34 20 L 34 45 L 57 20 L 70 20 L 46 48 L 70 76 L 57 76 L 34 51 L 34 76 L 23 76 Z" fill="url(#kGold)"/>
-        <path d="M 23 20 L 34 20 L 34 45 L 57 20 L 70 20 L 46 48 L 70 76 L 57 76 L 34 51 L 34 76 L 23 76 Z" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
-        <circle cx="4"  cy="4"  r="2" fill="#c9a97a" opacity=".4"/>
-        <circle cx="92" cy="4"  r="2" fill="#c9a97a" opacity=".4"/>
-        <circle cx="4"  cy="92" r="2" fill="#c9a97a" opacity=".4"/>
-        <circle cx="92" cy="92" r="2" fill="#c9a97a" opacity=".4"/>
+
+        <!-- Фон круга -->
+        <circle cx="50" cy="50" r="47" fill="url(#bgGlow)"/>
+
+        <!-- Внешний золотой ободок -->
+        <circle cx="50" cy="50" r="47" fill="none" stroke="url(#bordGold)" stroke-width="1.8"/>
+
+        <!-- Тонкое внутреннее кольцо — орнамент -->
+        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(201,169,122,0.22)" stroke-width="0.6" stroke-dasharray="3 4"/>
+
+        <!-- Буква К — курсив Cormorant Garamond -->
+        <text x="50" y="50"
+          text-anchor="middle"
+          dominant-baseline="central"
+          font-family="Cormorant Garamond, Georgia, serif"
+          font-size="62"
+          font-weight="700"
+          font-style="italic"
+          fill="url(#kLetGold)">К</text>
       </svg>
     </div>
 
