@@ -339,6 +339,9 @@ footer {
     <div class="brand-name">Кератон</div>
     <div class="brand-sub">Плитка &nbsp;·&nbsp; Сантехника &nbsp;·&nbsp; Каспийск</div>
 
+    <!-- Индикатор режима работы -->
+    <div id="workStatus" style="display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:100px;border:1px solid;font-size:12px;font-weight:600;letter-spacing:0.04em;margin-bottom:20px;"></div>
+
     <div class="tags">
       <span class="tag">Керамогранит</span>
       <span class="tag">Мрамор</span>
@@ -569,6 +572,144 @@ footer {
   document.getElementById('rvBubble').onclick = () => win.classList.toggle('open');
   document.getElementById('rvClose').onclick = () => win.classList.remove('open');
 })();
+</script>
+
+<!-- CALCULATOR POPUP -->
+<style>
+  .calc-bubble {
+    position: fixed; bottom: 28px; right: 96px; z-index: 997;
+    background: rgba(201,169,122,.12); border: 1px solid rgba(201,169,122,.25);
+    color: #c9a97a; border-radius: 100px; padding: 8px 16px 8px 12px;
+    font-size: 13px; font-weight: 600; font-family: 'Manrope', sans-serif;
+    cursor: pointer; display: flex; align-items: center; gap: 7px;
+    transition: background .2s; white-space: nowrap;
+  }
+  .calc-bubble:hover { background: rgba(201,169,122,.22); }
+  .calc-window {
+    position: fixed; bottom: 80px; right: 16px; z-index: 996;
+    width: 300px; background: #1a1510;
+    border: 1px solid rgba(201,169,122,.15); border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.5); overflow: hidden;
+    opacity: 0; pointer-events: none;
+    transform: translateY(12px) scale(.97);
+    transition: opacity .25s, transform .25s;
+  }
+  .calc-window.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
+  .calc-head {
+    background: #0f0d0a; padding: 13px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(201,169,122,.1);
+  }
+  .calc-head-title { font-size: 13px; font-weight: 600; color: #f0e8d8; }
+  .calc-head-sub { font-size: 11px; color: #7a6a52; }
+  .calc-close { background: none; border: none; color: #7a6a52; cursor: pointer; font-size: 20px; line-height: 1; }
+  .calc-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .calc-row label { display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #7a6a52; margin-bottom: 5px; }
+  .calc-row input, .calc-row select {
+    width: 100%; background: rgba(255,255,255,.05);
+    border: 1px solid rgba(201,169,122,.2); border-radius: 8px;
+    padding: 9px 12px; font-size: 13px; font-family: 'Manrope', sans-serif;
+    color: #f0e8d8; outline: none;
+  }
+  .calc-row input:focus, .calc-row select:focus { border-color: #c9a97a; }
+  .calc-row select option { background: #1a1510; }
+  .calc-btn {
+    width: 100%; padding: 12px; background: #c9a97a; color: #0f0d0a;
+    border: none; border-radius: 10px; font-size: 13px; font-weight: 700;
+    font-family: 'Manrope', sans-serif; cursor: pointer; transition: background .2s;
+  }
+  .calc-btn:hover { background: #d4ba90; }
+  .calc-result {
+    background: rgba(201,169,122,.08); border: 1px solid rgba(201,169,122,.2);
+    border-radius: 10px; padding: 12px; display: none;
+  }
+  .calc-result-title { font-size: 11px; color: #7a6a52; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+  .calc-result-val { font-size: 22px; font-weight: 700; color: #c9a97a; }
+  .calc-result-sub { font-size: 12px; color: #7a6a52; margin-top: 4px; }
+</style>
+
+<button class="calc-bubble" id="calcBubble">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+  Калькулятор плитки
+</button>
+
+<div class="calc-window" id="calcWindow">
+  <div class="calc-head">
+    <div>
+      <div class="calc-head-title">Калькулятор плитки</div>
+      <div class="calc-head-sub">Узнайте сколько плитки нужно</div>
+    </div>
+    <button class="calc-close" id="calcClose">×</button>
+  </div>
+  <div class="calc-body">
+    <div class="calc-row">
+      <label>Длина помещения (м)</label>
+      <input type="number" id="cLen" placeholder="например 4.5" min="0" step="0.1" />
+    </div>
+    <div class="calc-row">
+      <label>Ширина помещения (м)</label>
+      <input type="number" id="cWid" placeholder="например 3.2" min="0" step="0.1" />
+    </div>
+    <div class="calc-row">
+      <label>Запас на подрезку</label>
+      <select id="cWaste">
+        <option value="10">10% — простая укладка</option>
+        <option value="15" selected>15% — со смещением</option>
+        <option value="20">20% — диагональная укладка</option>
+      </select>
+    </div>
+    <button class="calc-btn" id="calcCalc">Рассчитать</button>
+    <div class="calc-result" id="calcResult">
+      <div class="calc-result-title">Вам понадобится</div>
+      <div class="calc-result-val" id="calcVal"></div>
+      <div class="calc-result-sub" id="calcSub"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Индикатор режима работы
+  (function(){
+    const el = document.getElementById('workStatus');
+    const now = new Date(new Date().toLocaleString('en', {timeZone:'Europe/Moscow'}));
+    const day = now.getDay(); // 0=вс,1=пн,...,5=пт,6=сб
+    const h = now.getHours() + now.getMinutes()/60;
+    const isWorkDay = day !== 5; // пятница выходной
+    const isWorkHour = h >= 8 && h < 18;
+    const open = isWorkDay && isWorkHour;
+    el.style.borderColor = open ? 'rgba(37,211,102,.4)' : 'rgba(255,100,100,.3)';
+    el.style.background = open ? 'rgba(37,211,102,.08)' : 'rgba(255,100,100,.06)';
+    el.style.color = open ? '#25d366' : '#ff6464';
+    const dot = `<span style="width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;"></span>`;
+    if (open) {
+      el.innerHTML = dot + ' Сейчас открыто · до 18:00';
+    } else if (day === 5) {
+      el.innerHTML = dot + ' Пятница — выходной';
+    } else if (h < 8) {
+      el.innerHTML = dot + ' Откроемся в 8:00';
+    } else {
+      el.innerHTML = dot + ' Закрыто · откроемся в 8:00';
+    }
+  })();
+
+  // Калькулятор плитки
+  (function(){
+    const win = document.getElementById('calcWindow');
+    document.getElementById('calcBubble').onclick = () => win.classList.toggle('open');
+    document.getElementById('calcClose').onclick = () => win.classList.remove('open');
+    document.getElementById('calcCalc').onclick = () => {
+      const len = parseFloat(document.getElementById('cLen').value);
+      const wid = parseFloat(document.getElementById('cWid').value);
+      const waste = parseInt(document.getElementById('cWaste').value);
+      if (!len || !wid || len <= 0 || wid <= 0) { alert('Введите длину и ширину'); return; }
+      const area = len * wid;
+      const total = area * (1 + waste / 100);
+      const res = document.getElementById('calcResult');
+      document.getElementById('calcVal').textContent = total.toFixed(1) + ' м²';
+      document.getElementById('calcSub').textContent = `Площадь ${area.toFixed(1)} м² + ${waste}% запас на подрезку`;
+      res.style.display = 'block';
+    };
+  })();
 </script>
 
 <footer>
