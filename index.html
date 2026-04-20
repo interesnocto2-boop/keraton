@@ -399,6 +399,86 @@ footer {
   </a>
 </div>
 
+<!-- REVIEWS -->
+<section style="max-width:600px;margin:0 auto;padding:0 16px 56px;">
+  <div class="map-label" style="margin-bottom:20px;">
+    ★★★★★ &nbsp; 87 отзывов &nbsp; · &nbsp; Оценка 4.9
+  </div>
+  <div id="reviews-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+  <button id="reviews-more" style="display:block;width:100%;margin-top:16px;padding:13px;background:rgba(201,169,122,.08);border:1px solid rgba(201,169,122,.2);border-radius:12px;color:#c9a97a;font-size:13px;font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif;">
+    Показать ещё отзывы
+  </button>
+</section>
+
+<style>
+  .review-card {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .review-av {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(201,169,122,.15);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 600;
+    color: #c9a97a; flex-shrink: 0;
+  }
+  .review-name { font-size: 13px; font-weight: 600; color: #f0e8d8; margin-bottom: 2px; }
+  .review-stars { font-size: 11px; color: #c9a97a; margin-bottom: 6px; }
+  .review-text { font-size: 13px; color: #a09070; line-height: 1.55; }
+  .review-date { font-size: 11px; color: #4a3f30; margin-top: 6px; }
+</style>
+
+<script>
+(function(){
+  const all = [
+    {n:'Мадина А.', s:5, t:'Отличный магазин! Купили плитку для ванной и кухни, всё привезли вовремя. Качество супер, цены адекватные. Рекомендую всем в Каспийске!', d:'2 дня назад'},
+    {n:'Руслан М.', s:5, t:'Брал керамогранит на 40 квадратов. Помогли подобрать, посчитали расход, даже скидку сделали. Буду ещё обращаться.', d:'5 дней назад'},
+    {n:'Патимат Г.', s:5, t:'Очень вежливые продавцы, большой выбор. Нашла именно то что хотела для ванной. Спасибо Кератону!', d:'1 неделю назад'},
+    {n:'Арсен Д.', s:5, t:'Взял смеситель и душевую кабину. Всё установили быстро, работает отлично уже 3 месяца. Качество хорошее.', d:'1 неделю назад'},
+    {n:'Зарема К.', s:5, t:'Долго выбирала плитку для прихожей, сотрудники терпеливо всё показали и объяснили. Довольна покупкой!', d:'2 недели назад'},
+    {n:'Магомед Ш.', s:5, t:'Хороший ассортимент, есть редкие форматы которых нет у конкурентов. Цены честные. Советую.', d:'2 недели назад'},
+    {n:'Аминат Р.', s:4, t:'В целом хорошо. Немного подождали доставку но товар пришёл целый. Плитка красивая, укладчик доволен.', d:'3 недели назад'},
+    {n:'Шамиль Б.', s:5, t:'Сделали ремонт в двух санузлах, вся плитка отсюда. Брак ноль, размеры точные. Мастера оценили качество.', d:'1 месяц назад'},
+    {n:'Хадижат У.', s:5, t:'Купила мозаику для фартука на кухне — просто красота! Никто в городе такого нет. Только Кератон!', d:'1 месяц назад'},
+    {n:'Камиль Н.', s:5, t:'Отличный магазин, ездил из Махачкалы специально. Стоит того — выбор огромный и цены лучше чем в городе.', d:'1 месяц назад'},
+    {n:'Лейла С.', s:5, t:'Брала ванну и смесители. Всё на высшем уровне, помогли выбрать под наш интерьер. Спасибо большое!', d:'2 месяца назад'},
+    {n:'Ибрагим Т.', s:5, t:'Несколько лет покупаю здесь всё для ремонта. Постоянный клиент — всегда доволен качеством и сервисом.', d:'2 месяца назад'},
+  ];
+
+  let shown = 0;
+  const list = document.getElementById('reviews-list');
+  const btn = document.getElementById('reviews-more');
+
+  function showNext() {
+    const batch = all.slice(shown, shown + 4);
+    batch.forEach(r => {
+      const stars = '★'.repeat(r.s) + '☆'.repeat(5 - r.s);
+      const card = document.createElement('div');
+      card.className = 'review-card';
+      card.innerHTML = `
+        <div class="review-av">${r.n[0]}</div>
+        <div>
+          <div class="review-name">${r.n}</div>
+          <div class="review-stars">${stars}</div>
+          <div class="review-text">${r.t}</div>
+          <div class="review-date">${r.d}</div>
+        </div>`;
+      list.appendChild(card);
+    });
+    shown += batch.length;
+    if (shown >= all.length) btn.style.display = 'none';
+  }
+
+  showNext();
+  btn.onclick = showNext;
+})();
+</script>
+
 <footer>
   © 2026 Кератон &nbsp;·&nbsp; Каспийск, Дагестан
 </footer>
