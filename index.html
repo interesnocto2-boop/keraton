@@ -1211,5 +1211,110 @@ footer {
 })();
 </script>
 
+<!-- STARS OVERLAY -->
+<div id="starsOverlay" style="position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0;transition:opacity .4s;">
+  <canvas id="starsCanvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+  <div id="starsText" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;opacity:0;transition:opacity .6s .5s;">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,7vw,52px);font-weight:700;color:#f8e898;letter-spacing:0.06em;text-shadow:0 0 40px rgba(201,169,122,.8);margin-bottom:16px;">Кератон</div>
+    <div style="font-size:clamp(14px,3.5vw,22px);color:#c9a97a;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:24px;">Плитка &amp; Сантехника</div>
+    <div style="font-size:clamp(13px,3vw,18px);color:#f0e8d8;line-height:1.8;max-width:340px;text-shadow:0 2px 12px rgba(0,0,0,.8);">87 довольных клиентов<br>Каспийск · Дагестан<br><span style="color:#c9a97a;">С нами ремонт становится искусством</span></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const overlay = document.getElementById('starsOverlay');
+  const canvas  = document.getElementById('starsCanvas');
+  const text    = document.getElementById('starsText');
+  const logo    = document.querySelector('.logo-wrap');
+
+  let stars = [], raf, timeout1, timeout2;
+
+  function init() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    stars = [];
+    const count = Math.floor(canvas.width * canvas.height / 5000);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: -20 - Math.random() * canvas.height,
+        size: 1 + Math.random() * 3.5,
+        speed: 3 + Math.random() * 6,
+        opacity: 0.5 + Math.random() * 0.5,
+        twist: (Math.random() - 0.5) * 1.2,
+        angle: Math.random() * Math.PI * 2,
+        angleSpeed: (Math.random() - 0.5) * 0.15,
+      });
+    }
+  }
+
+  function drawStar(ctx, x, y, r, angle) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const a1 = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+      const a2 = ((i * 4 + 2) * Math.PI) / 5 - Math.PI / 2;
+      i === 0 ? ctx.moveTo(Math.cos(a1)*r, Math.sin(a1)*r) : ctx.lineTo(Math.cos(a1)*r, Math.sin(a1)*r);
+      ctx.lineTo(Math.cos(a2)*(r*0.4), Math.sin(a2)*(r*0.4));
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function animate() {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(15,13,10,0.18)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    stars.forEach(s => {
+      s.y += s.speed;
+      s.x += s.twist;
+      s.angle += s.angleSpeed;
+      const grd = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 2);
+      grd.addColorStop(0, `rgba(248,232,152,${s.opacity})`);
+      grd.addColorStop(0.5, `rgba(201,169,122,${s.opacity * 0.7})`);
+      grd.addColorStop(1, `rgba(201,169,122,0)`);
+      ctx.fillStyle = grd;
+      drawStar(ctx, s.x, s.y, s.size, s.angle);
+    });
+
+    raf = requestAnimationFrame(animate);
+  }
+
+  function show() {
+    init();
+    overlay.style.pointerEvents = 'all';
+    overlay.style.opacity = '1';
+    overlay.style.background = 'rgba(15,13,10,0.82)';
+    text.style.opacity = '1';
+    animate();
+
+    timeout1 = setTimeout(() => {
+      text.style.opacity = '0';
+      overlay.style.opacity = '0';
+    }, 5400);
+    timeout2 = setTimeout(() => {
+      cancelAnimationFrame(raf);
+      overlay.style.pointerEvents = 'none';
+      overlay.style.background = '';
+    }, 6000);
+  }
+
+  overlay.addEventListener('click', () => {
+    text.style.opacity = '0';
+    overlay.style.opacity = '0';
+    setTimeout(() => { cancelAnimationFrame(raf); overlay.style.pointerEvents = 'none'; overlay.style.background = ''; }, 500);
+  });
+
+  logo.style.cursor = 'pointer';
+  logo.addEventListener('click', show);
+})();
+</script>
+
 </body>
 </html>
