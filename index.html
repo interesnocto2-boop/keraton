@@ -822,6 +822,32 @@ footer {
 
     const tiles = Array.from({length:24}, () => newTile(true));
 
+    // Снежинки на герое
+    function newFlake(spread) {
+      return {
+        x: Math.random() * W(),
+        y: spread ? Math.random() * H() : -10,
+        r: 0.8 + Math.random() * 2.2,
+        vy: 0.3 + Math.random() * 0.7,
+        vx: (Math.random() - 0.5) * 0.4,
+        opacity: 0.08 + Math.random() * 0.18,
+        wobble: Math.random() * Math.PI * 2,
+      };
+    }
+    const flakes = Array.from({length: 60}, () => newFlake(true));
+
+    function drawFlake(f) {
+      ctx.save();
+      ctx.globalAlpha = f.opacity;
+      ctx.fillStyle = '#e8f4ff';
+      ctx.shadowColor = 'rgba(200,230,255,0.6)';
+      ctx.shadowBlur = 4;
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
     function drawTile(t) {
       const rot = t.rotZ + Math.sin(t.wobble)*t.wobbleAmp;
       const hw=t.w/2, hh=t.h/2, p=t.p;
@@ -871,6 +897,11 @@ footer {
         t.y+=t.vy; t.x+=t.vx; t.wobble+=0.005;
         if (t.y < -t.h*3) Object.assign(t, newTile(false));
         drawTile(t);
+      });
+      flakes.forEach(f => {
+        f.y += f.vy; f.x += f.vx + Math.sin(f.wobble) * 0.3; f.wobble += 0.02;
+        if (f.y > H() + 10) Object.assign(f, newFlake(false));
+        drawFlake(f);
       });
     })();
   })();
@@ -1211,106 +1242,101 @@ footer {
 })();
 </script>
 
-<!-- STARS OVERLAY -->
-<div id="starsOverlay" style="position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0;transition:opacity .4s;">
-  <canvas id="starsCanvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
-  <div id="starsText" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;opacity:0;transition:opacity .6s .5s;">
-    <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,7vw,52px);font-weight:700;color:#f8e898;letter-spacing:0.06em;text-shadow:0 0 40px rgba(201,169,122,.8);margin-bottom:16px;">Кератон</div>
-    <div style="font-size:clamp(14px,3.5vw,22px);color:#c9a97a;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:24px;">Плитка &amp; Сантехника</div>
-    <div style="font-size:clamp(13px,3vw,18px);color:#f0e8d8;line-height:1.8;max-width:340px;text-shadow:0 2px 12px rgba(0,0,0,.8);">87 довольных клиентов<br>Каспийск · Дагестан<br><span style="color:#c9a97a;">С нами ремонт становится искусством</span></div>
+<!-- SNOW OVERLAY -->
+<div id="snowOverlay" style="position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0;transition:opacity .5s;background:rgba(10,12,18,0.85);">
+  <canvas id="snowCanvas" style="position:absolute;inset:0;"></canvas>
+  <div id="snowText" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;opacity:0;transition:opacity .7s .4s;pointer-events:none;">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(32px,8vw,56px);font-weight:700;color:#f0f6ff;letter-spacing:0.08em;text-shadow:0 0 40px rgba(180,210,255,.6),0 0 80px rgba(180,210,255,.3);margin-bottom:14px;">Кератон</div>
+    <div style="font-size:clamp(12px,3vw,18px);color:#a0c4e8;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:28px;">Плитка &amp; Сантехника</div>
+    <div style="font-size:clamp(13px,3vw,17px);color:#ddeeff;line-height:1.9;max-width:320px;text-shadow:0 2px 16px rgba(0,0,0,.9);">87 довольных клиентов<br>Каспийск · Дагестан<br><br><span style="color:#c9a97a;font-family:'Cormorant Garamond',serif;font-size:1.15em;font-weight:600;">С нами ремонт становится искусством</span></div>
   </div>
 </div>
 
 <script>
 (function(){
-  const overlay = document.getElementById('starsOverlay');
-  const canvas  = document.getElementById('starsCanvas');
-  const text    = document.getElementById('starsText');
+  const overlay = document.getElementById('snowOverlay');
+  const canvas  = document.getElementById('snowCanvas');
+  const text    = document.getElementById('snowText');
   const logo    = document.querySelector('.logo-wrap');
-
-  let stars = [], raf, timeout1, timeout2;
+  const ctx     = canvas.getContext('2d');
+  let flakes = [], raf, t1, t2, running = false;
 
   function init() {
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    stars = [];
-    const count = Math.floor(canvas.width * canvas.height / 5000);
-    for (let i = 0; i < count; i++) {
-      stars.push({
+    flakes = [];
+    const n = Math.round(canvas.width * canvas.height / 3000);
+    for (let i = 0; i < n; i++) {
+      flakes.push({
         x: Math.random() * canvas.width,
-        y: -20 - Math.random() * canvas.height,
-        size: 1 + Math.random() * 3.5,
-        speed: 3 + Math.random() * 6,
+        y: -Math.random() * canvas.height,
+        r: 1 + Math.random() * 3.5,
+        vy: 2 + Math.random() * 5,
+        vx: (Math.random() - 0.5) * 1.5,
+        wobble: Math.random() * Math.PI * 2,
         opacity: 0.5 + Math.random() * 0.5,
-        twist: (Math.random() - 0.5) * 1.2,
-        angle: Math.random() * Math.PI * 2,
-        angleSpeed: (Math.random() - 0.5) * 0.15,
       });
     }
   }
 
-  function drawStar(ctx, x, y, r, angle) {
+  function drawSnowflake(f) {
     ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(angle);
+    ctx.globalAlpha = f.opacity;
+    const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r * 2.5);
+    g.addColorStop(0,   'rgba(230,245,255,1)');
+    g.addColorStop(0.5, 'rgba(180,215,255,0.7)');
+    g.addColorStop(1,   'rgba(140,190,255,0)');
+    ctx.fillStyle = g;
     ctx.beginPath();
-    for (let i = 0; i < 5; i++) {
-      const a1 = (i * 4 * Math.PI) / 5 - Math.PI / 2;
-      const a2 = ((i * 4 + 2) * Math.PI) / 5 - Math.PI / 2;
-      i === 0 ? ctx.moveTo(Math.cos(a1)*r, Math.sin(a1)*r) : ctx.lineTo(Math.cos(a1)*r, Math.sin(a1)*r);
-      ctx.lineTo(Math.cos(a2)*(r*0.4), Math.sin(a2)*(r*0.4));
-    }
-    ctx.closePath();
+    ctx.arc(f.x, f.y, f.r * 2.5, 0, Math.PI * 2);
     ctx.fill();
+    // Крест снежинки
+    ctx.strokeStyle = 'rgba(210,235,255,0.85)';
+    ctx.lineWidth = f.r * 0.45;
+    ctx.lineCap = 'round';
+    const arm = f.r * 2.2;
+    for (let a = 0; a < 3; a++) {
+      const angle = (a * Math.PI) / 3 + f.wobble;
+      ctx.beginPath();
+      ctx.moveTo(f.x - Math.cos(angle)*arm, f.y - Math.sin(angle)*arm);
+      ctx.lineTo(f.x + Math.cos(angle)*arm, f.y + Math.sin(angle)*arm);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
   function animate() {
-    const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'rgba(15,13,10,0.18)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    stars.forEach(s => {
-      s.y += s.speed;
-      s.x += s.twist;
-      s.angle += s.angleSpeed;
-      const grd = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 2);
-      grd.addColorStop(0, `rgba(248,232,152,${s.opacity})`);
-      grd.addColorStop(0.5, `rgba(201,169,122,${s.opacity * 0.7})`);
-      grd.addColorStop(1, `rgba(201,169,122,0)`);
-      ctx.fillStyle = grd;
-      drawStar(ctx, s.x, s.y, s.size, s.angle);
+    flakes.forEach(f => {
+      f.y += f.vy;
+      f.x += f.vx + Math.sin(f.wobble) * 0.6;
+      f.wobble += 0.025;
+      if (f.y > canvas.height + 10) { f.y = -10; f.x = Math.random() * canvas.width; }
+      drawSnowflake(f);
     });
-
-    raf = requestAnimationFrame(animate);
+    if (running) raf = requestAnimationFrame(animate);
   }
 
   function show() {
+    if (running) return;
+    running = true;
     init();
     overlay.style.pointerEvents = 'all';
     overlay.style.opacity = '1';
-    overlay.style.background = 'rgba(15,13,10,0.82)';
     text.style.opacity = '1';
     animate();
-
-    timeout1 = setTimeout(() => {
-      text.style.opacity = '0';
-      overlay.style.opacity = '0';
-    }, 5400);
-    timeout2 = setTimeout(() => {
-      cancelAnimationFrame(raf);
-      overlay.style.pointerEvents = 'none';
-      overlay.style.background = '';
-    }, 6000);
+    t1 = setTimeout(() => { text.style.opacity = '0'; overlay.style.opacity = '0'; }, 5500);
+    t2 = setTimeout(() => { running = false; cancelAnimationFrame(raf); overlay.style.pointerEvents = 'none'; }, 6200);
   }
 
-  overlay.addEventListener('click', () => {
+  function hide() {
+    clearTimeout(t1); clearTimeout(t2);
     text.style.opacity = '0';
     overlay.style.opacity = '0';
-    setTimeout(() => { cancelAnimationFrame(raf); overlay.style.pointerEvents = 'none'; overlay.style.background = ''; }, 500);
-  });
+    setTimeout(() => { running = false; cancelAnimationFrame(raf); overlay.style.pointerEvents = 'none'; }, 500);
+  }
 
+  overlay.addEventListener('click', hide);
   logo.style.cursor = 'pointer';
   logo.addEventListener('click', show);
 })();
