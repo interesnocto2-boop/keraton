@@ -4,58 +4,49 @@
       <stop offset="0%" stop-color="#0f0d0a"/>
       <stop offset="100%" stop-color="#1a1208"/>
     </linearGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#f8e898"/>
       <stop offset="35%" stop-color="#c9a97a"/>
       <stop offset="70%" stop-color="#8a6040"/>
       <stop offset="100%" stop-color="#d4b060"/>
     </linearGradient>
-    <linearGradient id="kGold" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f8e898"/>
-      <stop offset="40%" stop-color="#d4a840"/>
-      <stop offset="100%" stop-color="#c9a97a"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#2a1e10" stop-opacity="1"/>
-      <stop offset="100%" stop-color="#0f0a06" stop-opacity="1"/>
+    <radialGradient id="bgGlow" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#2a1e10"/>
+      <stop offset="100%" stop-color="#0f0a06"/>
     </radialGradient>
   </defs>
 
   <!-- Фон -->
   <rect width="1200" height="630" fill="url(#bg)"/>
 
-  <!-- Декоративные линии -->
-  <line x1="60" y1="60" x2="1140" y2="60" stroke="rgba(201,169,122,0.08)" stroke-width="1"/>
-  <line x1="60" y1="570" x2="1140" y2="570" stroke="rgba(201,169,122,0.08)" stroke-width="1"/>
-  <line x1="60" y1="60" x2="60" y2="570" stroke="rgba(201,169,122,0.08)" stroke-width="1"/>
-  <line x1="1140" y1="60" x2="1140" y2="570" stroke="rgba(201,169,122,0.08)" stroke-width="1"/>
-
   <!-- Уголки -->
-  <path d="M60,90 L60,60 L90,60" stroke="rgba(201,169,122,0.4)" stroke-width="2" fill="none"/>
-  <path d="M1110,60 L1140,60 L1140,90" stroke="rgba(201,169,122,0.4)" stroke-width="2" fill="none"/>
-  <path d="M60,540 L60,570 L90,570" stroke="rgba(201,169,122,0.4)" stroke-width="2" fill="none"/>
-  <path d="M1110,570 L1140,570 L1140,540" stroke="rgba(201,169,122,0.4)" stroke-width="2" fill="none"/>
+  <path d="M60,95 L60,60 L95,60" stroke="rgba(201,169,122,0.4)" stroke-width="2" fill="none"/>
+  <path d="M1105,60 L1140,60 L1140,95" stroke="rgba(201,169,122,0.4)" stroke-width="2" fill="none"/>
+  <path d="M60,535 L60,570 L95,570" stroke="rgba(201,169,122,0.4)" stroke-width="2" fill="none"/>
+  <path d="M1105,570 L1140,570 L1140,535" stroke="rgba(201,169,122,0.4)" stroke-width="2" fill="none"/>
 
   <!-- Логотип круг -->
-  <circle cx="200" cy="315" r="110" fill="url(#glow)"/>
-  <circle cx="200" cy="315" r="110" fill="none" stroke="url(#gold)" stroke-width="2.5"/>
-  <circle cx="200" cy="315" r="94" fill="none" stroke="rgba(201,169,122,0.15)" stroke-width="1" stroke-dasharray="4 5"/>
+  <circle cx="210" cy="315" r="115" fill="url(#bgGlow)"/>
+  <circle cx="210" cy="315" r="115" fill="none" stroke="url(#gold)" stroke-width="2.5"/>
+  <circle cx="210" cy="315" r="98" fill="none" stroke="rgba(201,169,122,0.18)" stroke-width="1" stroke-dasharray="4 5"/>
 
-  <!-- Буква К -->
-  <text x="200" y="365" text-anchor="middle" font-family="Georgia, serif" font-size="140" font-weight="900" fill="url(#kGold)">К</text>
+  <!-- Буква К как path -->
+  <g transform="translate(152,210) scale(1.15)" fill="url(#gold)">
+    <path d="M8,0 L8,90 L28,90 L28,52 L68,90 L94,90 L50,47 L90,0 L65,0 L28,40 L28,0 Z"/>
+  </g>
 
   <!-- Разделитель -->
-  <line x1="340" y1="220" x2="340" y2="410" stroke="rgba(201,169,122,0.2)" stroke-width="1"/>
+  <line x1="355" y1="215" x2="355" y2="415" stroke="rgba(201,169,122,0.25)" stroke-width="1.5"/>
 
-  <!-- Название -->
-  <text x="400" y="295" font-family="Georgia, serif" font-size="86" font-weight="700" fill="#f0e8d8" letter-spacing="8">КЕРАТОН</text>
+  <!-- Название КЕРАТОН -->
+  <text x="390" y="300" font-family="Georgia,serif" font-size="90" font-weight="700" fill="#f0e8d8" letter-spacing="6">КЕРАТОН</text>
 
-  <!-- Подзаголовок -->
-  <text x="402" y="355" font-family="Arial, sans-serif" font-size="24" font-weight="400" fill="#c9a97a" letter-spacing="6">ПЛИТКА · САНТЕХНИКА · КАСПИЙСК</text>
+  <!-- Подпись -->
+  <text x="393" y="358" font-family="Arial,sans-serif" font-size="22" fill="#c9a97a" letter-spacing="5">ПЛИТКА · САНТЕХНИКА · КАСПИЙСК</text>
 
-  <!-- Адрес -->
-  <text x="402" y="420" font-family="Arial, sans-serif" font-size="20" fill="rgba(160,144,112,0.7)" letter-spacing="2">ул. Амет-хан Султана, 42 · keraton05.ru</text>
+  <!-- Линия -->
+  <rect x="390" y="378" width="660" height="1" fill="rgba(201,169,122,0.2)"/>
 
-  <!-- Золотая линия снизу -->
-  <rect x="400" y="382" width="680" height="1.5" fill="rgba(201,169,122,0.2)"/>
+  <!-- Сайт -->
+  <text x="393" y="415" font-family="Arial,sans-serif" font-size="18" fill="rgba(160,144,112,0.65)" letter-spacing="2">keraton05.ru · ул. Амет-хан Султана, 42</text>
 </svg>
