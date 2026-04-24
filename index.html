@@ -103,9 +103,9 @@ body {
   background-color: #0f0d0a;
   background-image:
     linear-gradient(160deg, rgba(8,6,4,0.72) 0%, rgba(10,8,5,0.48) 55%, rgba(8,6,4,0.80) 100%),
-    url('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1920&q=80');
+    url('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&q=72&fit=crop&crop=center');
   background-size: cover;
-  background-position: center;
+  background-position: center top;
   background-attachment: scroll;
 }
 
@@ -293,6 +293,14 @@ footer {
 @media(min-width: 600px) {
   .cta-group { flex-direction: row; max-width: 480px; }
   .btn-phone, .btn-wa { flex: 1; }
+}
+@media(min-width: 768px) {
+  .hero {
+    background-image:
+      linear-gradient(160deg, rgba(8,6,4,0.72) 0%, rgba(10,8,5,0.48) 55%, rgba(8,6,4,0.80) 100%),
+      url('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1920&q=80');
+    background-position: center;
+  }
 }
 </style>
 </head>
