@@ -94,17 +94,17 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px 40px;
+  padding: 80px 24px 56px;
   position: relative;
   overflow: hidden;
   text-align: center;
-}
-
-/* фоновые плитки */
-#heroBg {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  z-index: 0; pointer-events: none;
+  background-color: #0f0d0a;
+  background-image:
+    linear-gradient(160deg, rgba(8,6,4,0.72) 0%, rgba(10,8,5,0.48) 55%, rgba(8,6,4,0.80) 100%),
+    url('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1920&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: scroll;
 }
 
 
@@ -163,22 +163,41 @@ body {
   margin-bottom: 40px;
 }
 
-/* ── TAGS ── */
-.tags {
+/* ── HERO CATEGORY BUTTONS ── */
+.hero-cats {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 48px;
+  gap: 10px;
+  margin-bottom: 44px;
+  max-width: 540px;
 }
-.tag {
-  padding: 6px 16px;
-  border: 1px solid rgba(201,169,122,.3);
+.hero-cat {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.09);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.18);
   border-radius: 100px;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  color: #c9a97a;
+  color: #f0e8d8;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, transform .15s, color .2s;
 }
+.hero-cat:hover {
+  background: rgba(201,169,122,0.22);
+  border-color: rgba(201,169,122,0.55);
+  color: #f8e898;
+  transform: translateY(-2px);
+}
+.hero-cat-icon { font-size: 16px; line-height: 1; }
 
 /* ── BUTTONS ── */
 .cta-group {
@@ -224,51 +243,6 @@ body {
   transition: background .2s, color .2s, transform .2s;
 }
 .btn-wa:hover { background: #25d366; color: #fff; transform: translateY(-2px); }
-
-/* ── INFO CARDS ── */
-.info-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-  max-width: 400px;
-}
-.info-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 14px;
-  padding: 14px 16px;
-  flex: 1;
-  min-width: 140px;
-  text-align: left;
-}
-.info-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(201,169,122,.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: #c9a97a;
-}
-.info-label {
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #7a6a52;
-  margin-bottom: 3px;
-}
-.info-val {
-  font-size: 13px;
-  font-weight: 500;
-  color: #f0e8d8;
-  line-height: 1.4;
-}
 
 /* divider */
 .divider {
@@ -414,8 +388,6 @@ footer {
 </script>
 
 <section class="hero">
-  <canvas id="heroBg"></canvas>
-
   <div class="hero-content">
     <!-- LOGO -->
     <div class="logo-wrap">
@@ -465,14 +437,23 @@ footer {
     <!-- Индикатор режима работы -->
     <div id="workStatus" style="display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:100px;border:1px solid;font-size:12px;font-weight:600;letter-spacing:0.04em;margin-bottom:20px;"></div>
 
-    <div class="tags">
-      <span class="tag">Керамогранит</span>
-      <span class="tag">Мрамор</span>
-      <span class="tag">Мозаика</span>
-      <span class="tag">Ванны</span>
-      <span class="tag">Смесители</span>
-      <span class="tag">Душевые</span>
-    </div>
+    <nav class="hero-cats" aria-label="Категории товаров">
+      <a class="hero-cat" href="#sec-catalog">
+        <span class="hero-cat-icon">◈</span> Плитка
+      </a>
+      <a class="hero-cat" href="#sec-catalog">
+        <span class="hero-cat-icon">◫</span> Ламинат
+      </a>
+      <a class="hero-cat" href="#sec-catalog">
+        <span class="hero-cat-icon">◧</span> Кварц-Винил
+      </a>
+      <a class="hero-cat" href="#sec-catalog">
+        <span class="hero-cat-icon">◉</span> Сантехника
+      </a>
+      <a class="hero-cat" href="#sec-catalog">
+        <span class="hero-cat-icon">◎</span> Тёплый пол
+      </a>
+    </nav>
 
     <div class="cta-group">
       <a class="btn-phone" href="tel:+79640224848">
