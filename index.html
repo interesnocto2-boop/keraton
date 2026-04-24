@@ -1172,9 +1172,18 @@ function toggleCat(el) {
   .cb-head-status { font-size: 11px; color: #7a6a52; }
   .cb-close { margin-left: auto; background: none; border: none; color: #7a6a52; cursor: pointer; font-size: 20px; line-height: 1; }
   .cb-messages { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
-  .cb-msg { max-width: 86%; padding: 9px 13px; border-radius: 12px; font-size: 13px; line-height: 1.5; }
+  @keyframes cb-msg-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .cb-msg { max-width: 86%; padding: 9px 13px; border-radius: 12px; font-size: 13px; line-height: 1.5; animation: cb-msg-in .28s ease-out forwards; }
   .cb-msg.bot { background: rgba(201,169,122,.1); color: #f0e8d8; border-bottom-left-radius: 3px; align-self: flex-start; }
   .cb-msg.user { background: #c9a97a; color: #0f0d0a; border-bottom-right-radius: 3px; align-self: flex-end; font-weight: 500; }
+  .cb-typing { display: flex; gap: 5px; padding: 10px 13px; align-self: flex-start; background: rgba(201,169,122,.08); border-radius: 12px; border-bottom-left-radius: 3px; animation: cb-msg-in .2s ease-out forwards; }
+  .cb-typing span { width: 7px; height: 7px; border-radius: 50%; background: #c9a97a; opacity: 0.35; animation: cb-dot .85s ease-in-out infinite; }
+  .cb-typing span:nth-child(2) { animation-delay: .18s; }
+  .cb-typing span:nth-child(3) { animation-delay: .36s; }
+  @keyframes cb-dot { 0%,70%,100% { opacity: 0.35; transform: scale(1); } 35% { opacity: 1; transform: scale(1.25); } }
   .cb-btns { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
   .cb-btn {
     background: rgba(201,169,122,.1); color: #c9a97a;
@@ -1273,7 +1282,18 @@ function toggleCat(el) {
   }
 
   function botSay(text, delay) {
-    return new Promise(r => setTimeout(() => { addMsg(text, 'bot'); r(); }, delay || 600));
+    return new Promise(r => {
+      const typing = document.createElement('div');
+      typing.className = 'cb-typing';
+      typing.innerHTML = '<span></span><span></span><span></span>';
+      msgs.appendChild(typing);
+      msgs.scrollTop = msgs.scrollHeight;
+      setTimeout(() => {
+        typing.remove();
+        addMsg(text, 'bot');
+        r();
+      }, delay || 700);
+    });
   }
 
   async function start() {
@@ -1374,11 +1394,13 @@ function toggleCat(el) {
     document.getElementById('cbBadge').style.display = 'none';
     start();
     setTimeout(() => {
+      win.style.transition = 'opacity .45s ease, transform .45s ease';
       win.classList.remove('open');
+      setTimeout(() => { win.style.transition = ''; }, 500);
       document.getElementById('cbBubble').classList.add('pulse');
       document.getElementById('cbGreenDot').classList.add('show');
-    }, 2500);
-  }, 1000);
+    }, 5500);
+  }, 1800);
 })();
 </script>
 
