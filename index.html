@@ -836,11 +836,7 @@ function toggleCat(el) {
   @media(max-width:600px){
     .rv-bubble{ bottom:96px; left:16px; padding:7px 12px; font-size:12px; }
     .rv-window{ width:calc(100vw - 32px); left:16px; bottom:150px; }
-    .calc-bubble{ bottom:88px; right:16px; width:48px; height:48px; }
-    .calc-window{ width:calc(100vw - 32px); right:16px; left:auto; bottom:148px; max-height:calc(100svh - 160px); }
-    .calc-bubble-tip{ display:none; }
     .cb-bubble{ bottom:16px; left:16px; }
-    .wa-fixed{ bottom:16px; right:16px; }
   }
 </style>
 
@@ -965,145 +961,6 @@ function toggleCat(el) {
 })();
 </script>
 
-<!-- CALCULATOR POPUP -->
-<style>
-  .calc-bubble {
-    position: fixed; bottom: 96px; right: 28px; z-index: 997;
-    width: 56px; height: 56px; border-radius: 50%;
-    background: #1a5276; color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; box-shadow: 0 4px 20px rgba(26,82,118,.5);
-    transition: transform .2s, box-shadow .2s; border: none;
-  }
-  .calc-bubble:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(26,82,118,.65); }
-  .calc-bubble-tip {
-    position: fixed; bottom: 108px; right: 92px; z-index: 997;
-    background: rgba(26,82,118,.92); color: #fff;
-    font-size: 12px; font-family: 'Manrope', sans-serif; font-weight: 600;
-    padding: 5px 10px; border-radius: 8px; pointer-events: none;
-    white-space: nowrap; opacity: 0; transition: opacity .3s;
-  }
-  .calc-bubble-tip.show { opacity: 1; }
-  .calc-window {
-    position: fixed; bottom: 164px; right: 16px; z-index: 996;
-    width: 310px; background: #1a1510;
-    border: 1px solid rgba(201,169,122,.15); border-radius: 16px;
-    box-shadow: 0 8px 40px rgba(0,0,0,.5); overflow: hidden;
-    opacity: 0; pointer-events: none;
-    transform: translateY(12px) scale(.97);
-    transition: opacity .25s, transform .25s;
-    max-height: calc(100svh - 180px); overflow-y: auto;
-  }
-  .calc-window.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
-  .calc-head {
-    background: #0f0d0a; padding: 13px 16px;
-    display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid rgba(201,169,122,.1);
-    position: sticky; top: 0; z-index: 1;
-  }
-  .calc-head-title { font-size: 13px; font-weight: 600; color: #f0e8d8; }
-  .calc-head-sub { font-size: 11px; color: #7a6a52; }
-  .calc-close { background: none; border: none; color: #7a6a52; cursor: pointer; font-size: 20px; line-height: 1; }
-  .calc-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-  .calc-row label { display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #7a6a52; margin-bottom: 5px; }
-  .calc-row input, .calc-row select {
-    width: 100%; background: rgba(255,255,255,.05);
-    border: 1px solid rgba(201,169,122,.2); border-radius: 8px;
-    padding: 9px 12px; font-size: 13px; font-family: 'Manrope', sans-serif;
-    color: #f0e8d8; outline: none;
-  }
-  .calc-row input:focus, .calc-row select:focus { border-color: #c9a97a; }
-  .calc-row select option { background: #1a1510; }
-  .calc-dims { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .calc-btn {
-    width: 100%; padding: 12px; background: #c9a97a; color: #0f0d0a;
-    border: none; border-radius: 10px; font-size: 13px; font-weight: 700;
-    font-family: 'Manrope', sans-serif; cursor: pointer; transition: background .2s;
-  }
-  .calc-btn:hover { background: #d4ba90; }
-  .calc-result {
-    background: rgba(201,169,122,.08); border: 1px solid rgba(201,169,122,.2);
-    border-radius: 10px; padding: 14px; display: none;
-  }
-  .calc-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .calc-result-item { text-align: center; }
-  .calc-result-label { font-size: 10px; color: #7a6a52; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
-  .calc-result-val { font-size: 20px; font-weight: 700; color: #c9a97a; }
-  .calc-result-unit { font-size: 11px; color: #7a6a52; }
-  .calc-result-cost { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(201,169,122,.15); text-align: center; display: none; }
-  .calc-result-cost-val { font-size: 22px; font-weight: 700; color: #f0e8d8; }
-  .calc-result-cost-label { font-size: 11px; color: #7a6a52; margin-top: 2px; }
-</style>
-
-<button class="calc-bubble" id="calcBubble" title="Калькулятор плитки">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="11" y2="14"/><line x1="8" y1="18" x2="11" y2="18"/><line x1="14" y1="14" x2="17" y2="14"/><line x1="14" y1="18" x2="17" y2="18"/></svg>
-</button>
-<div class="calc-bubble-tip" id="calcTip">Калькулятор плитки</div>
-
-<div class="calc-window" id="calcWindow">
-  <div class="calc-head">
-    <div>
-      <div class="calc-head-title">Калькулятор плитки</div>
-      <div class="calc-head-sub">Количество и стоимость</div>
-    </div>
-    <button class="calc-close" id="calcClose">×</button>
-  </div>
-  <div class="calc-body">
-    <div class="calc-row">
-      <label>Формат плитки</label>
-      <select id="cFormat">
-        <option value="0.18,1.44,8">30×60 см (8 шт / ~1.44 м²/уп)</option>
-        <option value="0.36,1.44,4" selected>60×60 см (4 шт / ~1.44 м²/уп)</option>
-        <option value="0.54,1.62,3">60×90 см (3 шт / ~1.62 м²/уп)</option>
-        <option value="0.72,1.44,2">120×60 см (2 шт / ~1.44 м²/уп)</option>
-        <option value="1.44,1.44,1">120×120 см (1 шт / ~1.44 м²/уп)</option>
-        <option value="0.09,1.44,16">30×30 см (16 шт / ~1.44 м²/уп)</option>
-        <option value="0.12,1.44,12">20×60 см (12 шт / ~1.44 м²/уп)</option>
-      </select>
-    </div>
-    <div class="calc-dims">
-      <div class="calc-row">
-        <label>Длина (м)</label>
-        <input type="number" id="cLen" placeholder="4.5" min="0" step="0.1" />
-      </div>
-      <div class="calc-row">
-        <label>Ширина (м)</label>
-        <input type="number" id="cWid" placeholder="3.2" min="0" step="0.1" />
-      </div>
-    </div>
-    <div class="calc-row">
-      <label>Запас на подрезку</label>
-      <select id="cWaste">
-        <option value="10">10% — простая укладка</option>
-        <option value="15" selected>15% — со смещением</option>
-        <option value="20">20% — диагональная укладка</option>
-      </select>
-    </div>
-    <div class="calc-row">
-      <label>Цена за м² (₽, необязательно)</label>
-      <input type="number" id="cPrice" placeholder="например 1200" min="0" step="1" />
-    </div>
-    <button class="calc-btn" id="calcCalc">Рассчитать</button>
-    <div class="calc-result" id="calcResult">
-      <div class="calc-result-grid">
-        <div class="calc-result-item">
-          <div class="calc-result-label">Площадь с запасом</div>
-          <div class="calc-result-val" id="calcM2"></div>
-          <div class="calc-result-unit">м²</div>
-        </div>
-        <div class="calc-result-item">
-          <div class="calc-result-label">Упаковок</div>
-          <div class="calc-result-val" id="calcBoxes"></div>
-          <div class="calc-result-unit" id="calcPcsHint"></div>
-        </div>
-      </div>
-      <div class="calc-result-cost" id="calcCostBlock">
-        <div class="calc-result-cost-val" id="calcCost"></div>
-        <div class="calc-result-cost-label">примерная стоимость</div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
 
@@ -1270,59 +1127,12 @@ function toggleCat(el) {
     }
   })();
 
-  // Калькулятор плитки
-  (function(){
-    const win = document.getElementById('calcWindow');
-    const btn = document.getElementById('calcBubble');
-    const tip = document.getElementById('calcTip');
-
-    btn.addEventListener('mouseenter', () => tip.classList.add('show'));
-    btn.addEventListener('mouseleave', () => tip.classList.remove('show'));
-
-    btn.onclick = () => { win.classList.toggle('open'); tip.classList.remove('show'); };
-    document.getElementById('calcClose').onclick = () => win.classList.remove('open');
-
-    document.getElementById('calcCalc').onclick = () => {
-      const len = parseFloat(document.getElementById('cLen').value);
-      const wid = parseFloat(document.getElementById('cWid').value);
-      const waste = parseInt(document.getElementById('cWaste').value);
-      const price = parseFloat(document.getElementById('cPrice').value) || 0;
-      if (!len || !wid || len <= 0 || wid <= 0) { alert('Введите длину и ширину'); return; }
-
-      const [tileSizeStr, boxCovStr, pcsPerBoxStr] = document.getElementById('cFormat').value.split(',');
-      const boxCov = parseFloat(boxCovStr);
-      const pcsPerBox = parseInt(pcsPerBoxStr);
-
-      const area = len * wid;
-      const total = area * (1 + waste / 100);
-      const boxes = Math.ceil(total / boxCov);
-      const pcs = boxes * pcsPerBox;
-
-      document.getElementById('calcM2').textContent = total.toFixed(1);
-      document.getElementById('calcBoxes').textContent = boxes;
-      document.getElementById('calcPcsHint').textContent = pcs + ' шт';
-
-      const costBlock = document.getElementById('calcCostBlock');
-      if (price > 0) {
-        document.getElementById('calcCost').textContent = Math.ceil(total * price).toLocaleString('ru-RU') + ' ₽';
-        costBlock.style.display = 'block';
-      } else {
-        costBlock.style.display = 'none';
-      }
-
-      document.getElementById('calcResult').style.display = 'block';
-    };
-  })();
 </script>
 
 <footer>
   © 2026 Кератон &nbsp;·&nbsp; Каспийск, Дагестан
 </footer>
 
-<!-- WhatsApp fixed button -->
-<a class="wa-fixed" href="https://wa.me/79640224848?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21+%D0%9F%D0%B8%D1%88%D1%83+%D1%81+%D1%81%D0%B0%D0%B9%D1%82%D0%B0+keraton05.ru" target="_blank" rel="noopener" style="position:fixed;bottom:28px;right:28px;z-index:999;width:56px;height:56px;border-radius:50%;background:#25d366;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,.45);transition:transform .2s,box-shadow .2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
-</a>
 
 <!-- CHATBOT -->
 <style>
