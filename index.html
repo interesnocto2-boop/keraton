@@ -1792,15 +1792,8 @@ footer { padding: 32px 20px 24px; border-top: 1px solid rgba(201,169,122,.1); }
 <script>
 (function(){
   const WA = '79640224848';
-  const TG_TOKEN = ['8629733', '791:', 'AAGjJIjHLYuN0Ot', 'Nah5PsFrMcb2dxW9dR1A'].join('');
-  const TG_CHAT = '5576842404';
-
   function sendTelegram(text) {
-    const url = 'https://api.telegram.org/bot' + TG_TOKEN + '/sendMessage'
-      + '?chat_id=' + TG_CHAT
-      + '&text=' + encodeURIComponent(text)
-      + '&parse_mode=HTML';
-    fetch(url);
+    // Telegram отключён
   }
   const msgs = document.getElementById('cbMessages');
   const btns = document.getElementById('cbBtns');
